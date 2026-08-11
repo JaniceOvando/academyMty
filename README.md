@@ -48,6 +48,15 @@ ejecución. Descoméntalas y observa el error — ese es el ejercicio.
 | `v0` | `Principal2` | `String` sobrescribe `equals()` → `true`. `StringBuilder` **no** → `false`. |
 | `v1` | `Principal` | `equals()` propio en `Pato`, comparando con `==`. ¿Por qué funciona aquí y cuándo dejaría de hacerlo? |
 
+## `paso_parametros` — Qué le pasa a un argumento al entrar a un método
+
+| Paquete | Tema |
+|---|---|
+| `v0` | Se pasan un `int`, un `String` y un `StringBuilder` al mismo método. Uno de los tres vuelve cambiado al `main`. **Java siempre pasa por valor** — lo que se copia es la referencia, no el objeto: por eso `sb.append()` sí se ve fuera y `x = x + 10` no. |
+
+Dentro del método, `cadena` sigue valiendo `Hello`: `concat()` devuelve **otro** `String` y por eso hay que
+retornarlo. Las dos líneas comentadas están ahí para comprobarlo.
+
 ---
 
 ## Cómo abrirlo en Eclipse
@@ -58,7 +67,7 @@ ejecución. Descoméntalas y observa el error — ese es el ejercicio.
    ```
 2. En Eclipse: **File → Import… → General → Existing Projects into Workspace**.
 3. Selecciona la carpeta `academyMty` y marca **Search for nested projects**.
-4. Importa los cuatro proyectos.
+4. Importa los cinco proyectos.
 
 Solo se versiona el código fuente (`src/`). Las clases compiladas (`bin/`) las genera Eclipse
 al importar, por eso no están en el repositorio.
