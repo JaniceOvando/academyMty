@@ -57,6 +57,25 @@ ejecución. Descoméntalas y observa el error — ese es el ejercicio.
 Dentro del método, `cadena` sigue valiendo `Hello`: `concat()` devuelve **otro** `String` y por eso hay que
 retornarlo. Las dos líneas comentadas están ahí para comprobarlo.
 
+### El diagrama de la clase
+
+![Paso de parámetros: dos marcos de pila y los objetos del heap](paso_parametros/doc/paso-parametros-stack-heap.jpeg)
+
+Cómo se lee, elemento por elemento:
+
+| En el dibujo | En el código |
+|---|---|
+| Los **dos post-its** | Dos marcos de pila distintos: `main()` y `transforma()`. Cada uno con sus propias variables. |
+| **Dos cajas `int x`** | `x = x + 10` cambia la de `transforma` (pasa a 20). La de `main` sigue en 10 y ni se entera. |
+| Las **nubes** | El heap. `cadena` y `sb` no guardan el objeto: guardan **a dónde apuntar**. Eso es lo que se copia al llamar al método. |
+| Los **dos `sb` a la misma nube** | Una sola nube `"Hola Mundo"`, dos referencias. Por eso `sb.append()` sí se ve desde `main`. |
+| `"Hello World"` es una nube **aparte** | `concat()` no tocó `"Hello"`: creó otro objeto. Por eso hay que **retornarlo** — si no, se pierde. |
+| `"Hello"` sin ninguna flecha | Ya nadie la apunta: es basura para el recolector. |
+
+Ese es el resumen en una frase: **Java siempre pasa por valor.** Lo que se copia es la referencia,
+nunca el objeto — y por eso puedes *modificar* lo que hay al otro lado, pero no puedes *cambiar a
+dónde apunta* la variable del que te llamó.
+
 ---
 
 ## Cómo abrirlo en Eclipse
