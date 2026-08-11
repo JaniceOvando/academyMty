@@ -37,7 +37,8 @@ ejecución. Descoméntalas y observa el error — ese es el ejercicio.
 | Paquete | Tema |
 |---|---|
 | `v0` | `final` sobre un primitivo, sobre un mutable (`StringBuilder`) y sobre un inmutable (`String`). La clave: **`final` congela la referencia, no el contenido.** |
-| `v1`, `v2` | `final class Ave` — una clase final no se puede heredar (descomenta `Pato extends Ave`). |
+| `v1` | `final class Ave` — una clase final no se puede heredar (descomenta `Pato extends Ave`). |
+| `v2` | Ahora `final` va en los **métodos**, no en la clase: `Pato` sí puede heredar, pero no puede sobrescribir `volarAve()`. Y el `static final volar()` marca la diferencia entre **sobrescribir** y **ocultar** (`HIDDEN`): un método de clase no se sobrescribe. |
 
 ## `stringStringBuilder` — String vs. StringBuilder
 

@@ -1,12 +1,25 @@
 package com.curso.v2;
 
-final class Ave{
+class Ave{
+	
+	final void volarAve() {
+	}
+	
+	final static void volar() {	
+	}
 	
 }
 
-//class Pato extends Ave{
-//	
-//}
+class Pato extends Ave{
+	
+//	@Override
+//	void volarAve() {
+//	}
+	
+//	HIDDEN
+//	static void volar() {	
+//	}
+}
 
 public class Principal {
 
