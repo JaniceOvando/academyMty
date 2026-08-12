@@ -35,6 +35,7 @@ class ComparatorSueldo implements Comparator<Empleado>{
 	}
 }
 
+//PROGRAMACION IMPERATIVA (QUE Y COMO)
 class ComparatorEdadSueldo implements Comparator<Empleado>{
 	@Override
 	public int compare(Empleado o1, Empleado o2) {
