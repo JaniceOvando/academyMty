@@ -1,4 +1,4 @@
-package com.curso.v2A;
+package com.curso.v3;
 
 class Bici{}
 class Patines{}
@@ -11,15 +11,13 @@ public class Principal {
 		Patines patines = new Patines();
 		Moto moto = new Moto();
 		
-		Contenedor<Moto,Bici,StringBuilder> contenedor1 = 
-				new Contenedor<>(moto,bici,new StringBuilder("Hello"));
+		Contenedor<Moto> contenedor1 = new Contenedor<>(moto);
 		
 		System.out.println(contenedor1);
 		
-		Contenedor<Bici,Bici,Bici> contenedor2 = 
-				new Contenedor<>(bici,bici,bici);
+		Moto moto2 = contenedor1.getT();
 		
-		System.out.println(contenedor2);
+		contenedor1.setT(new Moto());
 
 	}
 }
