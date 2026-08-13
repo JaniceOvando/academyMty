@@ -1,6 +1,7 @@
-# Eclipse workspace metadata
+# Eclipse workspace metadata (incluye sus locks y logs)
+# Los .project, .classpath y .settings SI se versionan: son portables y
+# permiten importar cada proyecto en Eclipse recien clonado el repo.
 .metadata/
-*.lock
 
 # Compiled output
 bin/
@@ -11,12 +12,6 @@ target/
 
 # macOS
 .DS_Store
-
-# Logs
-*.log
-
-# IDE local settings (mantener .project y .classpath, ignorar caches locales)
-.recommenders/
 
 # Java
 *.jar
