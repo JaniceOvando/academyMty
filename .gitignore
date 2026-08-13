@@ -20,6 +20,9 @@ target/
 
 # Java
 *.jar
+# Excepcion: las librerias que un proyecto necesita para compilar SI se versionan,
+# porque .classpath las referencia y sin ellas el proyecto no compila al clonar.
+!**/lib/*.jar
 *.war
 *.ear
 hs_err_pid*
