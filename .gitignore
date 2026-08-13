@@ -8,6 +8,10 @@
 *.iml
 .vscode/
 
+# Claude Code: ajustes locales de cada maquina.
+# .claude/settings.json (el compartido) SI se versiona.
+.claude/settings.local.json
+
 # Compiled output
 bin/
 build/
