@@ -3,6 +3,11 @@
 # permiten importar cada proyecto en Eclipse recien clonado el repo.
 .metadata/
 
+# Otros IDEs (el proyecto se versiona en formato Eclipse)
+.idea/
+*.iml
+.vscode/
+
 # Compiled output
 bin/
 build/
