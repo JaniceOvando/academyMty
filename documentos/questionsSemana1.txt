@@ -1,0 +1,20 @@
+Explicame cuando usar una Clase abstracta (IS-A) y cuando una Interface (IS-A Comportamiento)
+
+HAS-A (Composicion, agregación o delegación)
+
+Polimorfismo
+
+Generics
+
+Cast POO vs Primitivos
+
+Singleton
+
+Final 
+
+Static 
+
+Tipo de método que se pueden usar en una Interface
+
+
+
