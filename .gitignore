@@ -28,5 +28,8 @@ target/
 # porque .classpath las referencia y sin ellas el proyecto no compila al clonar.
 !**/lib/*.jar
 *.war
+# Excepcion: este WAR ya construido SI se versiona, para poder desplegarlo
+# en Tomcat directamente desde el repo sin tener que recompilar el proyecto.
+!proyectosWeb/proyectoWar/jsp-student-tracker-bonus-search/web-student-tracker-solution.war
 *.ear
 hs_err_pid*
