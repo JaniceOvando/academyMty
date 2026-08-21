@@ -18,9 +18,14 @@ docker run --name mongo-express --network mongo-net -p 8082:8081 \
 Para Windows
 docker run --name mongo-express `
   --network mongo-net `
-  -p 8081:8081 `
+  -p 8082:8081 `
   -e ME_CONFIG_MONGODB_URL="mongodb://mongo-8:27017/" `
   -e ME_CONFIG_BASICAUTH=false `
   -d mongo-express  
 
-Luego abren http://localhost:8082
+Luego abren http://localhost:8082   (Mac y Windows por igual)
+
+OJO: mongo-express escucha en el 8081 DENTRO del contenedor, pero se publica
+en el 8082 del equipo. Tiene que ser el 8082 y no el 8081 porque esta misma
+aplicacion Spring Boot ya usa el 8081 (server.port=8081): si publicas
+mongo-express en el 8081 chocan entre si y uno de los dos no arranca.
