@@ -61,7 +61,7 @@ HTTP/1.1 401
 
 > NOTA: Si el paso 2 falla o no sabes la contraseña de root, todo el detalle está en `17-seguridad-autenticacion/instalacion.txt`. Ese `401` del paso 4 no es un error: es la señal de que la seguridad ya está puesta.
 
-> ATENCION: **Si trabajas en Windows.** Los comandos de arriba son de macOS y Linux. En PowerShell: usa `mvnw.cmd spring-boot:run` en lugar de `./mvnw`, y si un comando ocupa varias líneas, la barra `\` del final se cambia por acento grave `` ` ``. Los scripts `.sh` de la carpeta `guias/` necesitan **Git Bash** o **WSL**; en `instalacion.txt` están las versiones para PowerShell.
+> ATENCION: **Si trabajas en Windows.** Los comandos de arriba son de macOS y Linux. En PowerShell: usa `mvnw.cmd spring-boot:run` en lugar de `./mvnw`, y si un comando ocupa varias líneas, la barra `\` del final se cambia por acento grave `` ` ``. Los scripts `.sh` de la carpeta `scripts/` necesitan **Git Bash** o **WSL**; en `instalacion.txt` están las versiones para PowerShell.
 
 ## 01 La API desnuda
 
@@ -285,10 +285,10 @@ Deleted employee id - 5
 
 ### La matriz completa, automatizada
 
-El script `guias/test-endpoints.sh` corre las seis comprobaciones de la matriz, marca cada una con `OK` o `!!`, y crea y borra un empleado temporal para que tus datos queden como estaban:
+El script `scripts/test-endpoints.sh` corre las seis comprobaciones de la matriz, marca cada una con `OK` o `!!`, y crea y borra un empleado temporal para que tus datos queden como estaban:
 
 ```
-$ ./guias/test-endpoints.sh
+$ ./scripts/test-endpoints.sh
 OK  john                   GET    -> HTTP 200   (esperado 200)
 OK  john                   POST   -> HTTP 403   (esperado 403)
 OK  mary                   DELETE -> HTTP 403   (esperado 403)

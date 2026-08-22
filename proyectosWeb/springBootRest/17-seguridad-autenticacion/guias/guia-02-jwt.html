@@ -532,7 +532,7 @@ figure.poster figcaption{
   </div>
 
   <p class="note">Puedes tener la etapa 01 (<code>8071</code>) y esta (<code>8072</code>) corriendo <strong>a la vez</strong>: usan puertos distintos a propósito, para que compares la misma llamada contra las dos.</p>
-  <p class="note warn"><strong>Si trabajas en Windows.</strong> Los comandos de arriba son de macOS y Linux. En PowerShell: usa <code>mvnw.cmd spring-boot:run</code> en lugar de <code>./mvnw</code>, y si un comando ocupa varias líneas, la barra <code>\</code> del final se cambia por acento grave <code>`</code>. Los scripts <code>.sh</code> de la carpeta <code>guias/</code> necesitan <strong>Git Bash</strong> o <strong>WSL</strong>; en <code>instalacion.txt</code> están las versiones para PowerShell.</p>
+  <p class="note warn"><strong>Si trabajas en Windows.</strong> Los comandos de arriba son de macOS y Linux. En PowerShell: usa <code>mvnw.cmd spring-boot:run</code> en lugar de <code>./mvnw</code>, y si un comando ocupa varias líneas, la barra <code>\</code> del final se cambia por acento grave <code>`</code>. Los scripts <code>.sh</code> de la carpeta <code>scripts/</code> necesitan <strong>Git Bash</strong> o <strong>WSL</strong>; en <code>instalacion.txt</code> están las versiones para PowerShell.</p>
 
 </section>
 
@@ -830,11 +830,11 @@ figure.poster figcaption{
   <p class="note warn"><strong>Trampa de zsh (el shell por defecto del Mac).</strong> Si escribes <code>curl -u "$USUARIO:test123"</code> con una variable, zsh interpreta el <code>:t</code> como un modificador de historia y te manda <code>johnest123</code> como nombre de usuario. Vas a ver un <code>401</code> desconcertante y una petición de contraseña interactiva. La forma correcta es con llaves: <code>"${USUARIO}:test123"</code>.</p>
 
   <h3>La matriz completa</h3>
-  <p>El script <code>guias/test-endpoints.sh</code> corre 11 comprobaciones, incluida la de manipular el token:</p>
+  <p>El script <code>scripts/test-endpoints.sh</code> corre 11 comprobaciones, incluida la de manipular el token:</p>
 
   <div class="term">
     <button class="copy" type="button">Copiar</button>
-<pre><code><span class="p">$</span> <span class="cmd">./guias/test-endpoints.sh</span>
+<pre><code><span class="p">$</span> <span class="cmd">./scripts/test-endpoints.sh</span>
 <span class="out ok">OK  GET con token de john                            -&gt; HTTP 200  (esperado 200)</span>
 <span class="out ok">OK  POST con token de john (EMPLOYEE)                -&gt; HTTP 403  (esperado 403)</span>
 <span class="out ok">OK  HTTP Basic contra /api/employees                 -&gt; HTTP 401  (esperado 401)</span>

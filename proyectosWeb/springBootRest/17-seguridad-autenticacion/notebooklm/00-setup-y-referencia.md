@@ -160,7 +160,7 @@ Para Windows (PowerShell), con acento grave al final de cada linea:
 Tarda unos 15 segundos en arrancar. Luego crea el realm, el client,
 los roles y los usuarios de una sola vez:
 
-  ./03-security-oauth2/guias/keycloak-setup.sh
+  ./03-security-oauth2/scripts/keycloak-setup.sh
 
 Consola web:  http://localhost:8090     (admin / admin)
 Comprobacion: curl http://localhost:8090/realms/academy/.well-known/openid-configuration
@@ -579,7 +579,7 @@ public class EmployeeRestController {
 
 Cada etapa trae su matriz automatizada. Resultados verificados: 6 + 11 + 8 = 25 comprobaciones en verde.
 
-### `01-security-basic/guias/test-endpoints.sh`
+### `01-security-basic/scripts/test-endpoints.sh`
 
 ```bash
 #!/bin/bash
@@ -667,7 +667,7 @@ echo "  401 = no se quien eres      (fallo de AUTENTICACION)"
 echo "  403 = se quien eres, pero no puedes  (fallo de AUTORIZACION)"
 ```
 
-### `02-security-jwt/guias/test-endpoints.sh`
+### `02-security-jwt/scripts/test-endpoints.sh`
 
 ```bash
 #!/bin/bash
@@ -766,7 +766,7 @@ echo "  Spring tolera 60 segundos de desfase de reloj por defecto"
 echo "  (JwtTimestampValidator), pensando en servidores con relojes distintos."
 ```
 
-### `03-security-oauth2/guias/test-endpoints.sh`
+### `03-security-oauth2/scripts/test-endpoints.sh`
 
 ```bash
 #!/bin/bash

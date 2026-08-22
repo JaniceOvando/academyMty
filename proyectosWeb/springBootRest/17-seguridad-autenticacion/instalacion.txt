@@ -75,7 +75,7 @@ Para Windows (PowerShell), con acento grave al final de cada linea:
 Tarda unos 15 segundos en arrancar. Luego crea el realm, el client,
 los roles y los usuarios de una sola vez:
 
-  ./03-security-oauth2/guias/keycloak-setup.sh
+  ./03-security-oauth2/scripts/keycloak-setup.sh
 
 Consola web:  http://localhost:8090     (admin / admin)
 Comprobacion: curl http://localhost:8090/realms/academy/.well-known/openid-configuration

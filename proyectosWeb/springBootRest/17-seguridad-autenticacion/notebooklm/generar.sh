@@ -128,9 +128,9 @@ for f in CruddemoApplication entity/Employee dao/EmployeeRepository service/Empl
 done
 echo; echo "## Scripts de prueba"
 echo; echo "Cada etapa trae su matriz automatizada. Resultados verificados: 6 + 11 + 8 = 25 comprobaciones en verde."
-vuelca 01-security-basic/guias/test-endpoints.sh bash
-vuelca 02-security-jwt/guias/test-endpoints.sh bash
-vuelca 03-security-oauth2/guias/test-endpoints.sh bash
+vuelca 01-security-basic/scripts/test-endpoints.sh bash
+vuelca 02-security-jwt/scripts/test-endpoints.sh bash
+vuelca 03-security-oauth2/scripts/test-endpoints.sh bash
 } > "$AQUI/00-setup-y-referencia.md"
 
 # ---------------------------------------------------------------------- 01 basic
@@ -204,7 +204,7 @@ vuelca 03-security-oauth2/pom.xml xml
 echo; echo "## CONFIGURACIÓN DE KEYCLOAK"; echo
 echo "Script re-ejecutable que crea el realm academy, el client employee-api, los roles"
 echo "EMPLOYEE/MANAGER/ADMIN y los tres usuarios. Verificado desde cero y en segunda pasada."
-vuelca 03-security-oauth2/guias/keycloak-setup.sh bash
+vuelca 03-security-oauth2/scripts/keycloak-setup.sh bash
 } > "$AQUI/03-oauth2.md"
 
 echo "Regenerados en $AQUI:"

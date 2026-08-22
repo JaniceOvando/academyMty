@@ -526,7 +526,7 @@ figure.poster figcaption{
 <span class="cm"># las siguientes veces basta con:  docker start keycloak-academy</span>
 
 <span class="cm"># 2. crear el realm, el client, los roles y los usuarios (solo la primera vez)</span>
-<span class="p">$</span> <span class="cmd">./guias/keycloak-setup.sh</span>
+<span class="p">$</span> <span class="cmd">./scripts/keycloak-setup.sh</span>
 
 <span class="cm"># 3. comprobar que Keycloak responde ANTES de seguir</span>
 <span class="p">$</span> <span class="cmd">curl -s http://localhost:8090/realms/academy/.well-known/openid-configuration | head -c 80</span>
@@ -541,7 +541,7 @@ figure.poster figcaption{
   </div>
 
   <p class="note">Keycloak trae consola web en <a href="http://localhost:8090">http://localhost:8090</a> (usuario <code>admin</code>, contraseña <code>admin</code>). Vale la pena abrirla y pasearse: ahí vas a ver los usuarios, los roles y el client que creó el script del paso 2. Todo el detalle está en <code>17-seguridad-autenticacion/instalacion.txt</code>.</p>
-  <p class="note warn"><strong>Si trabajas en Windows.</strong> Los comandos de arriba son de macOS y Linux. En PowerShell: usa <code>mvnw.cmd spring-boot:run</code> en lugar de <code>./mvnw</code>, y si un comando ocupa varias líneas, la barra <code>\</code> del final se cambia por acento grave <code>`</code>. Los scripts <code>.sh</code> de la carpeta <code>guias/</code> necesitan <strong>Git Bash</strong> o <strong>WSL</strong>; en <code>instalacion.txt</code> están las versiones para PowerShell.</p>
+  <p class="note warn"><strong>Si trabajas en Windows.</strong> Los comandos de arriba son de macOS y Linux. En PowerShell: usa <code>mvnw.cmd spring-boot:run</code> en lugar de <code>./mvnw</code>, y si un comando ocupa varias líneas, la barra <code>\</code> del final se cambia por acento grave <code>`</code>. Los scripts <code>.sh</code> de la carpeta <code>scripts/</code> necesitan <strong>Git Bash</strong> o <strong>WSL</strong>; en <code>instalacion.txt</code> están las versiones para PowerShell.</p>
 
 </section>
 
@@ -767,10 +767,10 @@ figure.poster figcaption{
   <p class="note warn"><strong>El <code>sub</code> es un UUID, no el nombre.</strong> Es a propósito: john puede cambiar de nombre de usuario o de correo, pero su identificador interno no cambia nunca. Si guardas en tu base de datos “de quién es este registro”, guarda el <code>sub</code> — nunca el <code>preferred_username</code>.</p>
 
   <h3>La matriz completa</h3>
-  <p>El script <code>guias/test-endpoints.sh</code> corre las ocho comprobaciones, incluida la del token del emisor equivocado:</p>
+  <p>El script <code>scripts/test-endpoints.sh</code> corre las ocho comprobaciones, incluida la del token del emisor equivocado:</p>
   <div class="term">
     <button class="copy" type="button">Copiar</button>
-<pre><code><span class="p">$</span> <span class="cmd">./guias/test-endpoints.sh</span>
+<pre><code><span class="p">$</span> <span class="cmd">./scripts/test-endpoints.sh</span>
 <span class="out ok">OK  token de john (EMPLOYEE) GET                     -&gt; HTTP 200  (esperado 200)</span>
 <span class="out ok">OK  token de john POST                               -&gt; HTTP 403  (esperado 403)</span>
 <span class="out ok">OK  curl -u susan:test123                            -&gt; HTTP 401  (esperado 401)</span>

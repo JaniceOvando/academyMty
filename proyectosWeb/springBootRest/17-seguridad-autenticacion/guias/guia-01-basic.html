@@ -533,7 +533,7 @@ figure.poster figcaption{
   </div>
 
   <p class="note">Si el paso 2 falla o no sabes la contraseña de root, todo el detalle está en <code>17-seguridad-autenticacion/instalacion.txt</code>. Ese <code>401</code> del paso 4 no es un error: es la señal de que la seguridad ya está puesta.</p>
-  <p class="note warn"><strong>Si trabajas en Windows.</strong> Los comandos de arriba son de macOS y Linux. En PowerShell: usa <code>mvnw.cmd spring-boot:run</code> en lugar de <code>./mvnw</code>, y si un comando ocupa varias líneas, la barra <code>\</code> del final se cambia por acento grave <code>`</code>. Los scripts <code>.sh</code> de la carpeta <code>guias/</code> necesitan <strong>Git Bash</strong> o <strong>WSL</strong>; en <code>instalacion.txt</code> están las versiones para PowerShell.</p>
+  <p class="note warn"><strong>Si trabajas en Windows.</strong> Los comandos de arriba son de macOS y Linux. En PowerShell: usa <code>mvnw.cmd spring-boot:run</code> en lugar de <code>./mvnw</code>, y si un comando ocupa varias líneas, la barra <code>\</code> del final se cambia por acento grave <code>`</code>. Los scripts <code>.sh</code> de la carpeta <code>scripts/</code> necesitan <strong>Git Bash</strong> o <strong>WSL</strong>; en <code>instalacion.txt</code> están las versiones para PowerShell.</p>
 
 </section>
 
@@ -850,11 +850,11 @@ figure.poster figcaption{
   <p class="note"><strong>Compara la 3 con la 1.</strong> Son fallos distintos y el código lo dice: en la 1 la API no sabe quién llama (<code>401</code>); en la 3 sabe perfectamente que es john, y por eso puede decirle que no (<code>403</code>). Ese par es la pregunta de examen más probable de todo el tema.</p>
 
   <h3>La matriz completa, automatizada</h3>
-  <p>El script <code>guias/test-endpoints.sh</code> corre las seis comprobaciones de la matriz, marca cada una con <code>OK</code> o <code>!!</code>, y crea y borra un empleado temporal para que tus datos queden como estaban:</p>
+  <p>El script <code>scripts/test-endpoints.sh</code> corre las seis comprobaciones de la matriz, marca cada una con <code>OK</code> o <code>!!</code>, y crea y borra un empleado temporal para que tus datos queden como estaban:</p>
 
   <div class="term">
     <button class="copy" type="button">Copiar</button>
-<pre><code><span class="p">$</span> <span class="cmd">./guias/test-endpoints.sh</span>
+<pre><code><span class="p">$</span> <span class="cmd">./scripts/test-endpoints.sh</span>
 <span class="out ok">OK  john                   GET    -&gt; HTTP 200   (esperado 200)</span>
 <span class="out ok">OK  john                   POST   -&gt; HTTP 403   (esperado 403)</span>
 <span class="out ok">OK  mary                   DELETE -&gt; HTTP 403   (esperado 403)</span>

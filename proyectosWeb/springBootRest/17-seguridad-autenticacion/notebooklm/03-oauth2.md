@@ -52,7 +52,7 @@ $ docker run --name keycloak-academy -p 8090:8080 \
 # las siguientes veces basta con:  docker start keycloak-academy
 
 # 2. crear el realm, el client, los roles y los usuarios (solo la primera vez)
-$ ./guias/keycloak-setup.sh
+$ ./scripts/keycloak-setup.sh
 
 # 3. comprobar que Keycloak responde ANTES de seguir
 $ curl -s http://localhost:8090/realms/academy/.well-known/openid-configuration | head -c 80
@@ -68,7 +68,7 @@ $ ./mvnw spring-boot:run
 
 > NOTA: Keycloak trae consola web en http://localhost:8090 (usuario `admin`, contraseña `admin`). Vale la pena abrirla y pasearse: ahí vas a ver los usuarios, los roles y el client que creó el script del paso 2. Todo el detalle está en `17-seguridad-autenticacion/instalacion.txt`.
 
-> ATENCION: **Si trabajas en Windows.** Los comandos de arriba son de macOS y Linux. En PowerShell: usa `mvnw.cmd spring-boot:run` en lugar de `./mvnw`, y si un comando ocupa varias líneas, la barra `\` del final se cambia por acento grave `` ` ``. Los scripts `.sh` de la carpeta `guias/` necesitan **Git Bash** o **WSL**; en `instalacion.txt` están las versiones para PowerShell.
+> ATENCION: **Si trabajas en Windows.** Los comandos de arriba son de macOS y Linux. En PowerShell: usa `mvnw.cmd spring-boot:run` en lugar de `./mvnw`, y si un comando ocupa varias líneas, la barra `\` del final se cambia por acento grave `` ` ``. Los scripts `.sh` de la carpeta `scripts/` necesitan **Git Bash** o **WSL**; en `instalacion.txt` están las versiones para PowerShell.
 
 ## 01 Lo que arrastra JWT propio
 
@@ -214,10 +214,10 @@ El token de Keycloak medido en este proyecto: **1367 caracteres**, frente a los 
 
 ### La matriz completa
 
-El script `guias/test-endpoints.sh` corre las ocho comprobaciones, incluida la del token del emisor equivocado:
+El script `scripts/test-endpoints.sh` corre las ocho comprobaciones, incluida la del token del emisor equivocado:
 
 ```
-$ ./guias/test-endpoints.sh
+$ ./scripts/test-endpoints.sh
 OK  token de john (EMPLOYEE) GET                     -> HTTP 200  (esperado 200)
 OK  token de john POST                               -> HTTP 403  (esperado 403)
 OK  curl -u susan:test123                            -> HTTP 401  (esperado 401)
@@ -564,7 +564,7 @@ spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:8090/realm
 Script re-ejecutable que crea el realm academy, el client employee-api, los roles
 EMPLOYEE/MANAGER/ADMIN y los tres usuarios. Verificado desde cero y en segunda pasada.
 
-### `03-security-oauth2/guias/keycloak-setup.sh`
+### `03-security-oauth2/scripts/keycloak-setup.sh`
 
 ```bash
 #!/bin/bash

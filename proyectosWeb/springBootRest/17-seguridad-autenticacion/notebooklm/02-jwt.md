@@ -60,7 +60,7 @@ $ curl -u john:test123 -X POST http://localhost:8072/api/auth/login
 
 > NOTA: Puedes tener la etapa 01 (`8071`) y esta (`8072`) corriendo **a la vez**: usan puertos distintos a propósito, para que compares la misma llamada contra las dos.
 
-> ATENCION: **Si trabajas en Windows.** Los comandos de arriba son de macOS y Linux. En PowerShell: usa `mvnw.cmd spring-boot:run` en lugar de `./mvnw`, y si un comando ocupa varias líneas, la barra `\` del final se cambia por acento grave `` ` ``. Los scripts `.sh` de la carpeta `guias/` necesitan **Git Bash** o **WSL**; en `instalacion.txt` están las versiones para PowerShell.
+> ATENCION: **Si trabajas en Windows.** Los comandos de arriba son de macOS y Linux. En PowerShell: usa `mvnw.cmd spring-boot:run` en lugar de `./mvnw`, y si un comando ocupa varias líneas, la barra `\` del final se cambia por acento grave `` ` ``. Los scripts `.sh` de la carpeta `scripts/` necesitan **Git Bash** o **WSL**; en `instalacion.txt` están las versiones para PowerShell.
 
 ## 01 Lo que arrastra Basic
 
@@ -261,10 +261,10 @@ HTTP 401
 
 ### La matriz completa
 
-El script `guias/test-endpoints.sh` corre 11 comprobaciones, incluida la de manipular el token:
+El script `scripts/test-endpoints.sh` corre 11 comprobaciones, incluida la de manipular el token:
 
 ```
-$ ./guias/test-endpoints.sh
+$ ./scripts/test-endpoints.sh
 OK  GET con token de john                            -> HTTP 200  (esperado 200)
 OK  POST con token de john (EMPLOYEE)                -> HTTP 403  (esperado 403)
 OK  HTTP Basic contra /api/employees                 -> HTTP 401  (esperado 401)
