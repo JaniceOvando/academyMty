@@ -16,17 +16,11 @@ Seguridad 02 — JWT
 
 -
 
-
-
-
 Spring Boot 4.1 · Spring Security 7.1 · Guía de laboratorio · 02 de 03
 
 # El pase: JWT
 
-
-
 En el proyecto 01 la contraseña viajaba en cada petición. Aquí viaja *una sola vez*: la cambias por un pase firmado con fecha de caducidad. Las tablas, los roles y las reglas de autorización se quedan exactamente como estaban — solo cambia lo que llevas en la cabecera.
-
 
 - ~60 min
 
@@ -38,13 +32,7 @@ En el proyecto 01 la contraseña viajaba en cada petición. Aquí viaja *una sol
 
 - RSA 2048 · RS256
 
-
-
-
-
 ## 00 Poner en marcha
-
-
 
 - [ ]**Java 21 y Docker** `java -version` debe decir `21` o más, y `docker ps` debe responder sin errores.
 
@@ -57,22 +45,24 @@ En el proyecto 01 la contraseña viajaba en cada petición. Aquí viaja *una sol
 $ docker start mysql-9.7
 
 # 2. solo si NO hiciste la etapa 01: crear las tablas de usuarios
-$ docker exec -i mysql-9.7 mysql -uroot -pTU_PASSWORD employee_directory
+$ docker exec -i mysql-9.7 mysql -uroot -pTU_PASSWORD employee_directory < ../sql-scripts/01-security-tables.sql
 
+# 3. arrancar esta aplicación — escucha en el 8072
+$ cd 02-security-jwt
+$ ./mvnw spring-boot:run
+
+# 4. comprobar: esto debe devolverte un token
+$ curl -u john:test123 -X POST http://localhost:8072/api/auth/login
+{"accessToken":"eyJhbGciOiJSUzI1NiJ9...","tokenType":"Bearer","expiresIn":3600,"user":"john"}
+```
 
 > NOTA: Puedes tener la etapa 01 (`8071`) y esta (`8072`) corriendo **a la vez**: usan puertos distintos a propósito, para que compares la misma llamada contra las dos.
 
-> ATENCION: **Si trabajas en Windows.** Los comandos de arriba son de macOS y Linux. En PowerShell: usa `mvnw.cmd spring-boot:run` en lugar de `./mvnw`, y si un comando ocupa varias líneas, la barra `\` del final se cambia por acento grave ```. Los scripts `.sh` de la carpeta `guias/` necesitan **Git Bash** o **WSL**; en `instalacion.txt` están las versiones para PowerShell.
-
-
+> ATENCION: **Si trabajas en Windows.** Los comandos de arriba son de macOS y Linux. En PowerShell: usa `mvnw.cmd spring-boot:run` en lugar de `./mvnw`, y si un comando ocupa varias líneas, la barra `\` del final se cambia por acento grave `` ` ``. Los scripts `.sh` de la carpeta `guias/` necesitan **Git Bash** o **WSL**; en `instalacion.txt` están las versiones para PowerShell.
 
 ## 01 Lo que arrastra Basic
 
-
-
 El proyecto 01 quedó funcionando y seguro… mientras uses HTTPS. Pero tenía cuatro defectos que no se arreglan con más configuración, porque nacen todos de la misma raíz: **la prueba de identidad era el secreto mismo**.
-
-
 
 | Defecto de Basic | Qué hace JWT |
 |---|---|
@@ -81,16 +71,9 @@ El proyecto 01 quedó funcionando y seguro… mientras uses HTTPS. Pero tenía c
 | No hay logout posible | Tiras el token. Y como dura poco, la ventana es corta. |
 | No se puede acotar | El token dice qué puedes hacer: puedes emitir uno limitado. |
 
-
-
-
 > NOTA: **Lo que NO cambia.** Las tablas `members` y `roles` son las mismas — este proyecto usa el mismo script SQL del 01. Los usuarios son los mismos (`john`, `mary`, `susan`, todos con `test123`). Y las reglas de autorización son idénticas, línea por línea. Guarda esa idea: al terminar vas a poder comparar los dos `SecurityConfig` y ver que la parte de *quién puede qué* no se tocó.
 
-
-
 ## 02 Anatomía de un JWT
-
-
 
 Un JWT es un texto largo con **dos puntos** que lo parten en tres. Eso es todo:
 
@@ -98,10 +81,6 @@ Un JWT es un texto largo con **dos puntos** que lo parten en tres. Eso es todo:
 eyJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJzZWN1cml0eS1qd3QiLCJzdWIiOiJqb2huIiwi....Aiw4Heg6MZJTHpCTKkXWcTPOTJ0EYp43oC9D54tJ1_hIr6Z8...
 └──── HEADER ────┘ └──────── PAYLOAD ────────┘ └──────── FIRMA ────────┘
 ```
-
-
-
-
 
 Las tres partes son **base64** — el mismo base64 del proyecto 01. Así que se leen con el mismo comando, sin ninguna llave:
 
@@ -121,15 +100,9 @@ $ echo $TOKEN | cut -d. -f2 | base64 -d
 }
 ```
 
-
-
-
 > ATENCION: **Léelo dos veces: acabas de abrir el token sin ninguna contraseña.** Un JWT *no está cifrado*. Cualquiera que lo intercepte lee su contenido completo. Por eso jamás se mete ahí una contraseña, un número de tarjeta ni nada privado. Lo que un JWT garantiza no es el secreto: es que **nadie pudo modificarlo**.
 
-
 ### Los claims que importan
-
-
 
 | Claim | Significa | En nuestro token |
 |---|---|---|
@@ -139,39 +112,22 @@ $ echo $TOKEN | cut -d. -f2 | base64 -d
 | exp | expires : hasta cuándo vale | iat + 3600 |
 | roles | claim propio nuestro | ["ROLE_EMPLOYEE"] |
 
-
-
-
 Los cuatro primeros son estándar (RFC 7519); `roles` nos lo inventamos nosotros. Un JWT admite los claims que quieras — con la condición de que quepan, porque el token viaja en una cabecera HTTP en *cada* petición.
-
-
 
 ## 03 Firmar no es cifrar
 
-
-
 Si cualquiera puede leer el payload… ¿qué impide que lo reescriba y se ponga `ROLE_ADMIN`? La tercera parte del token: **la firma**.
 
-
-
 Este proyecto usa **RS256** = RSA + SHA-256, que trabaja con *dos* llaves distintas:
-
-
 
 | Llave | Quién la tiene | Para qué sirve |
 |---|---|---|
 | private.pem | Solo el servidor que emite | Firmar tokens nuevos |
 | public.pem | Cualquiera, sin problema | Validar que una firma es auténtica |
 
-
-
-
-
 Esa asimetría es todo el truco: **validar y firmar son operaciones distintas, con llaves distintas**. Puedes repartir la llave pública al mundo entero y nadie podrá emitir un token falso con ella. Si reescribes el payload, la firma deja de corresponder y el servidor lo detecta al instante.
 
-
 > NOTA: **¿Y por qué no una sola contraseña compartida (HS256)?** También existe y es más simple: un único secreto que firma y valida. El problema es que *todo el que puede validar, puede falsificar*. Con RSA puedes tener veinte servicios validando tokens y uno solo capaz de emitirlos. Esa es exactamente la arquitectura del proyecto 03, así que empezamos ya con RSA.
-
 
 ### Generar el par de llaves
 
@@ -181,55 +137,32 @@ $ openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out src/main/res
 $ openssl rsa -pubout -in src/main/resources/certs/private.pem -out src/main/resources/certs/public.pem
 ```
 
-
-
-
 > ATENCION: **En un proyecto real, `private.pem` NUNCA se sube a git.** Aquí está dentro del repositorio a propósito, para que la clase funcione sin pasos extra. En producción va en una variable de entorno, en un gestor de secretos o en un almacén de llaves — y el `.gitignore` la excluye. Si tu llave privada se filtra, cualquiera puede emitir tokens válidos con el rol que se le antoje.
-
-
 
 ## 04 Taquilla y torniquete
 
-
-
 Con JWT la aplicación tiene **dos puertas distintas**, y por eso el `SecurityConfig` tiene dos cadenas de filtros. Piensa en un concierto: compras el boleto una vez en la taquilla, y luego lo enseñas en el torniquete cada vez que entras.
-
-
-
 
 > **Diagrama:** 1 · LOGIN — UNA SOLA VEZ · cliente · -u john:test123 · cadena 1 · HTTP Basic · /api/auth/** · members / roles · BCrypt · MySQL · JwtEncoder · firma con la llave PRIVADA · token → al cliente · 2 · CADA PETICIÓN — YA SIN CONTRASEÑA · cliente · Bearer  · JwtDecoder · valida con la llave PÚBLICA · AuthorizationFilter · roles del claim, no de la BD · Controller · La base de datos NO se consulta aquí. · Todo lo que hace falta ya viene firmado dentro del token.
 
-
-
 Fig. 1 — Arriba la taquilla (una vez). Abajo el torniquete (cada petición).
-
-
-
 
 Ese recuadro de abajo es la ventaja operativa que hace famoso a JWT: **validar un token no toca la base de datos**. Con Basic, cada petición era una consulta a `members` más un cálculo de BCrypt (que, recuérdalo, es lento a propósito). Con JWT es una verificación de firma en memoria. Por eso escala.
 
-
 > ATENCION: **Y ese mismo recuadro es su gran desventaja.** Si borras a john de la base de datos o le quitas `ROLE_ADMIN`, su token sigue funcionando hasta que caduque — porque nadie va a preguntarle nada a la base de datos. Un JWT no se puede “apagar”. Por eso se emiten con vida corta, y por eso existen los *refresh tokens* y las listas de revocación.
 
-
-
 ## 05 El código
-
 
 ### La dependencia
 
 ```
-
-    org.springframework.boot
-    spring-boot-starter-security-oauth2-resource-server
-
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security-oauth2-resource-server</artifactId>
+</dependency>
 ```
 
-
-
-
 > ATENCION: **Sí, dice “oauth2” aunque todavía no estemos haciendo OAuth2.** No es un error de copiar y pegar. JWT nació dentro del ecosistema OAuth2 y Spring metió ahí todo el soporte de tokens. Esa misma dependencia es la que usarás sin cambios en el proyecto 03 — lo único que cambiará es de dónde viene la llave. Ojo también con el nombre: en Spring Boot 3 era `spring-boot-starter-oauth2-resource-server`, *sin* el `security-`.
-
 
 ### Dos cadenas, porque hay dos puertas
 
@@ -257,12 +190,7 @@ public SecurityFilterChain apiFilterChain(HttpSecurity http) throws Exception {
 }
 ```
 
-
-
-
-
 `securityMatcher` es la pieza nueva: acota una cadena a unas rutas. Con `@Order(1)` Spring prueba primero la de login; si la ruta no encaja, pasa a la siguiente. Las reglas de roles de la cadena 2 son un copiar y pegar del proyecto 01 — **ni una coma distinta**.
-
 
 ### Las dos llaves, en dos beans
 
@@ -281,12 +209,7 @@ public JwtDecoder jwtDecoder() {
 }
 ```
 
-
-
-
-
 Las llaves se inyectan solas desde `application.properties` con `@Value`: Spring convierte el archivo `.pem` en un objeto `RSAPublicKey` sin que escribas una línea de parseo.
-
 
 ### El login
 
@@ -306,12 +229,7 @@ public TokenResponse login(Authentication authentication) {
 }
 ```
 
-
-
-
 > NOTA: **Fíjate en lo que este método NO recibe.** No hay `@RequestBody` con usuario y contraseña, ni comparación de hashes, ni consulta SQL. Cuando este código se ejecuta, la cadena 1 *ya* validó el HTTP Basic contra la base de datos, y Spring nos entrega el resultado en el parámetro `Authentication`. Si las credenciales fueran malas, la ejecución nunca habría llegado aquí. Es la cadena de filtros del proyecto 01, reutilizada tal cual.
-
-
 
 ## 06 Probarlo
 
@@ -333,15 +251,9 @@ $ curl -u susan:test123 http://localhost:8072/api/employees
 HTTP 401
 ```
 
-
-
-
 > ATENCION: **Trampa de zsh (el shell por defecto del Mac).** Si escribes `curl -u "$USUARIO:test123"` con una variable, zsh interpreta el `:t` como un modificador de historia y te manda `johnest123` como nombre de usuario. Vas a ver un `401` desconcertante y una petición de contraseña interactiva. La forma correcta es con llaves: `"${USUARIO}:test123"`.
 
-
 ### La matriz completa
-
-
 
 El script `guias/test-endpoints.sh` corre 11 comprobaciones, incluida la de manipular el token:
 
@@ -355,16 +267,9 @@ OK  payload reescrito a ROLE_ADMIN                   -> HTTP 401  (esperado 401)
 OK  DELETE con token de susan (ADMIN)                -> HTTP 200  (esperado 200)
 ```
 
-
-
-
-
 ## 07 Romperlo
 
-
 ### Ascenderse a ADMIN
-
-
 
 El payload se lee sin llaves… así que reescríbelo. Cambia `ROLE_EMPLOYEE` por `ROLE_ADMIN`, vuelve a codificarlo en base64, pégale la firma original y mándalo:
 
@@ -373,22 +278,13 @@ $ curl -X DELETE -H "Authorization: Bearer $TOKEN_FALSIFICADO" .../api/employees
 HTTP 401  invalid_token
 ```
 
-
-
-
-
 La firma se calculó sobre el payload *original*. Al cambiar una letra, deja de corresponder — y sin la llave privada no puedes recalcularla. **Ese es el valor entero de un JWT: es de lectura pública y de escritura imposible.**
-
 
 > ATENCION: **La demo que sale mal en clase.** Casi todos los tutoriales dicen “cambia un carácter del token y verás que falla”. Si cambias el **último**, hay una posibilidad real de que *siga funcionando*: la firma son 2048 bits pero ocupa 342 caracteres base64, que dan para 2052 — al último carácter le sobran 4 bits. Medido en este proyecto: **15 de los 63 caracteres posibles (~24%) producen exactamente la misma firma**. No es un fallo de seguridad, son bits que no se usan. Cambia siempre un carácter *del medio*.
 
-
 ### Robar el token
 
-
-
 Un token robado funciona. No hay contraseña que adivinar: quien lo tenga, *es* john hasta que el token caduque. De ahí salen las tres reglas prácticas:
-
 
 - **HTTPS igual que en Basic.** El token viaja en claro en la cabecera; interceptarlo es tan fácil como interceptar la contraseña.
 
@@ -396,22 +292,13 @@ Un token robado funciona. No hay contraseña que adivinar: quien lo tenga, *es* 
 
 - **No lo guardes en `localStorage` si tu página tiene riesgo de XSS** — cualquier script inyectado lo lee. La alternativa es una cookie `HttpOnly`, que a cambio te devuelve el problema de CSRF. No hay opción gratis; hay que elegir con criterio.
 
-
-
-
 ## La caducidad y los 60 segundos
-
-
 
 Para ver caducar un token en vivo, arranca con un TTL corto:
 
 ```
 $ java -jar target/security-jwt-0.0.1-SNAPSHOT.jar --jwt.ttl-seconds=3
 ```
-
-
-
-
 
 Y entonces pasa algo que descoloca a todo el mundo. Esto está medido en este proyecto, con un token de 3 segundos:
 
@@ -423,23 +310,13 @@ WWW-Authenticate: Bearer error="invalid_token",
   error_description="Jwt expired at 2026-08-21T21:54:13Z"
 ```
 
-
-
-
 > NOTA: **No es un bug: es tolerancia de reloj.** `JwtTimestampValidator` acepta por defecto **60 segundos** de desfase, porque el servidor que firma y el que valida suelen ser máquinas distintas y sus relojes nunca están perfectamente sincronizados. Sin esa holgura, unos pocos segundos de deriva causarían rechazos aleatorios imposibles de depurar. Si quieres que caduque puntualmente, hay que configurar el validador a mano — es el ejercicio 4.
-
-
 
 ## Trampas de Spring Security 7
 
-
-
 Tres cosas que este proyecto hace de una forma concreta, y que ningún tutorial de Boot 3 te va a explicar porque en Boot 3 no pasaban:
 
-
 ### 1. El rol fantasma FACTOR_PASSWORD
-
-
 
 Spring Security 7 añade autoridades que describen *cómo* te autenticaste (soporte de multifactor). Si vuelcas `authentication.getAuthorities()` tal cual dentro del token, sale esto:
 
@@ -447,21 +324,13 @@ Spring Security 7 añade autoridades que describen *cómo* te autenticaste (sopo
 "roles": ["ROLE_EMPLOYEE", "FACTOR_PASSWORD"]
 ```
 
-
-
-
 No rompe nada, pero es información interna del servidor filtrándose a un token que viaja al cliente. Por eso el `AuthController` filtra:
 
 ```
 .filter(authority -> authority.startsWith("ROLE_"))
 ```
 
-
-
-
 ### 2. El prefijo SCOPE_
-
-
 
 Por defecto Spring lee el claim `scope` y le antepone `SCOPE_`, con lo que `hasRole("EMPLOYEE")` dejaría de funcionar y tendrías `403` en todo. Como nuestro claim se llama `roles` y ya trae el prefijo `ROLE_`, se lo decimos explícitamente:
 
@@ -470,23 +339,13 @@ authoritiesConverter.setAuthoritiesClaimName("roles");
 authoritiesConverter.setAuthorityPrefix("");
 ```
 
-
-
-
 Gracias a esas dos líneas, las reglas de autorización del proyecto 01 funcionan aquí sin tocarlas. En el proyecto 03 volverás a encontrarte este mismo problema, porque Keycloak coloca los roles en otro sitio distinto.
-
 
 ### 3. El nombre del starter
 
-
-
 Boot 4 renombró el starter a `spring-boot-starter-security-oauth2-resource-server`. El nombre viejo (`spring-boot-starter-oauth2-resource-server`) todavía existe, así que copiar de un tutorial de Boot 3 puede *parecer* que funciona. Usa el nuevo.
 
-
-
 ## Errores comunes
-
-
 
 | Síntoma | Causa | Arreglo |
 |---|---|---|
@@ -498,13 +357,7 @@ Boot 4 renombró el starter a `spring-boot-starter-security-oauth2-resource-serv
 | Failed to load ApplicationContext mencionando RSAPrivateKey | Falta el archivo .pem , la ruta está mal, o la llave no es PKCS#8. | Debe empezar por -----BEGIN PRIVATE KEY----- . Si dice RSA PRIVATE KEY es PKCS#1: regenérala con openssl genpkey . |
 | Cambié el código y no pasa nada | mvn spring-boot:run con devtools solo reinicia cuando cambia target/classes , y Maven no recompila solo. | Reinicia, o recompila desde el IDE. |
 
-
-
-
-
 ## Ejercicios
-
-
 
 - [ ]**1. Lee tu propio token** Haz login como `susan` y decodifica el payload. ¿Cuántos roles trae? Compara con el de `john` y explica de dónde salió la diferencia.
 
@@ -518,13 +371,10 @@ Boot 4 renombró el starter a `spring-boot-starter-security-oauth2-resource-serv
 
 - [ ]**6. Compara los dos proyectos** Abre lado a lado el `SecurityConfig` del 01 y el del 02. Haz una lista de lo que cambió y otra de lo que no. La segunda lista es más larga: esa es la idea.
 
-
-
 > NOTA: **Siguiente parada:** etapa 03 — OAuth2. El `AuthController`, las llaves RSA y hasta la tabla de usuarios van a *desaparecer*: los tokens los emitirá Keycloak y tu API se limitará a validarlos. El `oauth2ResourceServer(...)` que escribiste hoy se queda casi igual — solo cambia de dónde sale la llave pública.
 
-
-    Academia MTY · Seguridad y autenticación 02/03
-    Spring Boot 4.1.0 · Spring Security 7.1.0 · Java 21
+Academia MTY · Seguridad y autenticación 02/03
+Spring Boot 4.1.0 · Spring Security 7.1.0 · Java 21
 
 ---
 
@@ -901,7 +751,8 @@ jwt.ttl-seconds=3600
 		</plugins>
 	</build>
 
-</project>```
+</project>
+```
 
 ### Llaves RSA
 

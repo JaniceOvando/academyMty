@@ -16,17 +16,11 @@ Seguridad 03 — OAuth2
 
 -
 
-
-
-
 Spring Boot 4.1 · Spring Security 7.1 · Guía de laboratorio · 03 de 03
 
 # Delegar: OAuth2 y OIDC
 
-
-
 En esta etapa tu API *pierde* cosas: se le va el controlador de login, las llaves RSA y hasta la tabla de usuarios. Y queda más segura que nunca. Los tokens los emite Keycloak; tu API se limita a validarlos, y esa línea divisoria es todo el tema.
-
 
 - ~75 min
 
@@ -38,16 +32,9 @@ En esta etapa tu API *pierde* cosas: se le va el controlador de login, las llave
 
 - Keycloak en :8090
 
-
-
-
-
 ## 00 Poner en marcha
 
-
 > ATENCION: **Aquí el orden importa, y es la causa número uno de que la clase se atore.** Esta API descarga la configuración de Keycloak *al arrancar*. Si Keycloak no está listo todavía, la aplicación **no arranca** — no es que falle una petición: no levanta. Primero Keycloak, después la API.
-
-
 
 - [ ]**Java 21 y Docker** `java -version` debe decir `21` o más, y `docker ps` debe responder sin errores.
 
@@ -77,22 +64,13 @@ $ cd 03-security-oauth2
 $ ./mvnw spring-boot:run
 ```
 
-
-
-
 > NOTA: Keycloak trae consola web en http://localhost:8090 (usuario `admin`, contraseña `admin`). Vale la pena abrirla y pasearse: ahí vas a ver los usuarios, los roles y el client que creó el script del paso 2. Todo el detalle está en `17-seguridad-autenticacion/instalacion.txt`.
 
-> ATENCION: **Si trabajas en Windows.** Los comandos de arriba son de macOS y Linux. En PowerShell: usa `mvnw.cmd spring-boot:run` en lugar de `./mvnw`, y si un comando ocupa varias líneas, la barra `\` del final se cambia por acento grave ```. Los scripts `.sh` de la carpeta `guias/` necesitan **Git Bash** o **WSL**; en `instalacion.txt` están las versiones para PowerShell.
-
-
+> ATENCION: **Si trabajas en Windows.** Los comandos de arriba son de macOS y Linux. En PowerShell: usa `mvnw.cmd spring-boot:run` en lugar de `./mvnw`, y si un comando ocupa varias líneas, la barra `\` del final se cambia por acento grave `` ` ``. Los scripts `.sh` de la carpeta `guias/` necesitan **Git Bash** o **WSL**; en `instalacion.txt` están las versiones para PowerShell.
 
 ## 01 Lo que arrastra JWT propio
 
-
-
 El proyecto 02 quedó bien: tokens firmados, caducidad, roles dentro del token. Pero tu API seguía siendo la dueña de algo incómodo: **las contraseñas de todo el mundo**. Y eso trae problemas que no se arreglan con código:
-
-
 
 - **Cada API con su propia tabla de usuarios.** Cinco servicios, cinco tablas, cinco sitios donde se puede filtrar una contraseña, cinco procesos de “olvidé mi clave”.
 
@@ -102,19 +80,11 @@ El proyecto 02 quedó bien: tokens firmados, caducidad, roles dentro del token. 
 
 - **Nada de multifactor.** ¿Vas a implementar tú los códigos por SMS, las apps de autenticación y las llaves de seguridad?
 
-
-
 > NOTA: **La idea de OAuth2 en una frase:** saca la identidad de tu aplicación y ponla en un servicio dedicado. Tu API deja de preguntar “¿cuál es tu contraseña?” y pasa a preguntar “¿quién te avala?”. Es exactamente lo que ya haces cuando entras a un sitio con “Continuar con Google”: ese sitio nunca ve tu contraseña de Google.
-
-
 
 ## 02 Los cuatro actores
 
-
-
 OAuth2 tiene un vocabulario propio que suena abstracto hasta que lo aterrizas. Piensa en un hotel:
-
-
 
 | En el hotel | En OAuth2 | En este proyecto |
 |---|---|---|
@@ -124,49 +94,25 @@ OAuth2 tiene un vocabulario propio que suena abstracto hasta que lo aterrizas. P
 | La puerta de la habitación | Resource Server valida y deja pasar | tu API (:8073) |
 | Quien quiere entrar | Client la app que pide en tu nombre | curl, o una app web |
 
-
-
-
-
 Y ahora el detalle que hace clic: **la puerta de tu habitación no llama a recepción cada vez que metes la tarjeta.** La puerta sabe reconocer una tarjeta legítima por sí sola. Eso es exactamente lo que hace tu API con la firma del token — y es la razón por la que un Resource Server escala sin convertir al Authorization Server en un cuello de botella.
-
 
 > ATENCION: **Fíjate en quién NO aparece nunca.** En todo el flujo, la contraseña de john jamás toca tu API. Solo la ve Keycloak. Si mañana te hackean la API, no hay contraseñas que robar — porque no las tienes.
 
-
-
 ## 03 El flujo de verdad
-
-
 
 El flujo estándar se llama **Authorization Code + PKCE**. Es el que ocurre cuando pulsas “Continuar con Google”:
 
-
-
-
 > **Diagrama:** Client (la app) · Keycloak · tu API :8073 · 1 · te mando al login (con un reto PKCE) · 2 · john teclea su contraseña AQUÍ · 3 · vuelve un código de un solo uso · 4 · cambio el código por el token · 5 · access token (+ refresh token) · 6 · Authorization: Bearer  · 7 · valida la firma con el JWKS · sin preguntarle nada a Keycloak
-
-
 
 Fig. 1 — La contraseña solo aparece en el paso 2, y solo dentro de Keycloak.
 
-
-
-
 **¿Por qué un código intermedio y no el token directo?** Porque el paso 3 viaja por el navegador (queda en el historial, en los logs, en la barra de direcciones). Un código de un solo uso y vida de segundos no sirve de nada si se filtra. El token va por el paso 4, que es una llamada directa de servidor a servidor. **PKCE** añade que quien canjea el código demuestre ser el mismo que lo pidió.
-
 
 > ATENCION: **Y entonces, ¿por qué en clase usamos `grant_type=password`?** Porque el flujo de arriba necesita un navegador y no se puede hacer con `curl` en una línea. Ese atajo (*Direct Access Grant*) está **desaconsejado en OAuth 2.1** justamente porque devuelve la contraseña al client — lo que OAuth vino a evitar. Lo habilitamos solo para practicar desde la terminal. En una aplicación real: Authorization Code + PKCE, siempre.
 
-
-
 ## 04 OAuth2 no es OIDC
 
-
-
 Esta es la confusión número uno del tema, y se resuelve con una frase: **OAuth2 es autorización; OpenID Connect es autenticación**.
-
-
 
 |  | OAuth2 | OpenID Connect (OIDC) |
 |---|---|---|
@@ -175,24 +121,13 @@ Esta es la confusión número uno del tema, y se resuelve con una frase: **OAuth
 | Para | llamar a una API | saber el nombre, el correo, la foto |
 | Analogía | la tarjeta-llave | la credencial con tu foto |
 
-
-
-
-
 OIDC es una *capa encima* de OAuth2, no un competidor. Keycloak habla los dos, y por eso la URL de descubrimiento se llama `/.well-known/**openid-configuration**`. Nuestra API solo usa la parte OAuth2: recibe un `access_token` y comprueba permisos. El `id_token` lo usaría el frontend para pintar “Hola, john”.
-
 
 > NOTA: **Regla para no equivocarse:** si vas a mandar el token a una API, es un `access_token` y estás haciendo OAuth2. Si lo abres para leer quién es el usuario y saludarlo, es un `id_token` y estás haciendo OIDC. Mandar un `id_token` a una API es un error clásico.
 
-
-
 ## 05 El código que desaparece
 
-
-
 Compara el `SecurityConfig` del proyecto 02 con el de este. La lista interesante es la de lo que **ya no está**:
-
-
 
 | En el proyecto 02 | Aquí | Por qué |
 |---|---|---|
@@ -203,19 +138,11 @@ Compara el `SecurityConfig` del proyecto 02 con el de este. La lista interesante
 | AuthController | eliminado | el login pasa en Keycloak |
 | tablas members y roles | sin usar | la identidad ya no es asunto de esta API |
 
-
-
-
-
 Y lo que entra a cambio es **una línea de configuración**:
 
 ```
 spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:8090/realms/academy
 ```
-
-
-
-
 
 Con eso, al arrancar, Spring va solo a esa URL, lee `/.well-known/openid-configuration`, saca de ahí la dirección del `jwks_uri`, y de ahí descarga la llave pública. Cero criptografía escrita a mano:
 
@@ -229,15 +156,9 @@ $ curl -s http://localhost:8090/realms/academy/protocol/openid-connect/certs
   kid=USoiHqQNllGxYhCC... alg=RS256 use=sig kty=RSA
 ```
 
-
-
-
 > NOTA: **El `kid` es la pieza que faltaba.** El header del token de Keycloak trae `"kid"` (key id); el JWKS publica varias llaves, cada una con el suyo. Así el emisor puede *rotar* sus llaves sin romper nada: publica la nueva, los tokens nuevos apuntan a ella, y los viejos siguen validándose con la anterior hasta caducar. Tu API se entera sola. Ese problema, en el proyecto 02, lo tenías que resolver a mano parando el servidor.
 
-
 ### La única traducción necesaria
-
-
 
 Keycloak no pone los roles donde Spring los busca. Los mete anidados y sin prefijo:
 
@@ -246,23 +167,17 @@ Keycloak no pone los roles donde Spring los busca. Los mete anidados y sin prefi
 ```
 
 ```
-private static Collection extraerRoles(Jwt jwt) {
-    Map realmAccess = jwt.getClaim("realm_access");
+private static Collection<GrantedAuthority> extraerRoles(Jwt jwt) {
+    Map<String, Object> realmAccess = jwt.getClaim("realm_access");
     if (realmAccess == null || realmAccess.get("roles") == null) return List.of();
-    List roles = (List) realmAccess.get("roles");
+    List<String> roles = (List<String>) realmAccess.get("roles");
     return roles.stream()
             .map(role -> (GrantedAuthority) new SimpleGrantedAuthority("ROLE_" + role))
             .toList();
 }
 ```
 
-
-
-
-
 Baja dos niveles y añade el prefijo `ROLE_`. Gracias a esas seis líneas, las reglas de autorización del proyecto siguen siendo **exactamente las mismas de los proyectos 01 y 02**: `hasRole("EMPLOYEE")`, `hasRole("ADMIN")`. Tres formas distintas de autenticar, un único control de acceso.
-
-
 
 ## 06 Probarlo
 
@@ -278,13 +193,7 @@ $ curl -H "Authorization: Bearer $TOKEN" http://localhost:8073/api/employees
 [{"firstName":"Patrobas","lastName":"Filologo", ...}]
 ```
 
-
-
-
-
 El token de Keycloak medido en este proyecto: **1367 caracteres**, frente a los ~490 del proyecto 02. Y hay diferencias de fondo en el payload:
-
-
 
 | Claim | Proyecto 02 | Keycloak |
 |---|---|---|
@@ -295,15 +204,9 @@ El token de Keycloak medido en este proyecto: **1367 caracteres**, frente a los 
 | vida | 3600 s | 300 s + refresh de 1800 s |
 | total de claims | 5 | 20 |
 
-
-
-
 > ATENCION: **El `sub` es un UUID, no el nombre.** Es a propósito: john puede cambiar de nombre de usuario o de correo, pero su identificador interno no cambia nunca. Si guardas en tu base de datos “de quién es este registro”, guarda el `sub` — nunca el `preferred_username`.
 
-
 ### La matriz completa
-
-
 
 El script `guias/test-endpoints.sh` corre las ocho comprobaciones, incluida la del token del emisor equivocado:
 
@@ -317,13 +220,7 @@ OK  DELETE con token de susan (ADMIN)                -> HTTP 200  (esperado 200)
 OK  token emitido por el proyecto 02                 -> HTTP 401  (esperado 401)
 ```
 
-
-
-
-
 ## 07 Dónde vive la confianza
-
-
 
 Arranca el proyecto 02 en el 8072 y el 03 en el 8073 a la vez. Pide un token al 02 — es un JWT impecable: bien formado, firmado con RSA, sin caducar, con `ROLE_EMPLOYEE` dentro. Mándalo al 03:
 
@@ -334,19 +231,11 @@ WWW-Authenticate: Bearer error="invalid_token",
   error_description="Signed JWT rejected: Invalid signature"
 ```
 
-
-
-
-
 Rechazado. Y aquí está la idea con la que hay que cerrar el tema:
-
 
 > NOTA: **La confianza no está en “es un JWT”. Está en *quién lo firmó*.** Tu API no confía en tokens: confía en **un emisor**, el del `issuer-uri`, y en la llave pública que ese emisor publica. Cualquier token de cualquier otro origen es basura para ella, por perfecto que sea su formato. Ese es el motivo por el que un atacante no gana nada montando su propio servidor de tokens.
 
-
 ### Lo que ganaste, en concreto
-
-
 
 - **Tu API no guarda contraseñas.** Si te la comprometen, no hay credenciales que filtrar.
 
@@ -358,15 +247,9 @@ Rechazado. Y aquí está la idea con la que hay que cerrar el tema:
 
 - **Revocación de verdad.** Desactiva a john en Keycloak y su *refresh* deja de funcionar; su access token muere en 5 minutos, no en una hora.
 
-
-
 > ATENCION: **Y lo que cuesta:** una pieza más de infraestructura que hay que levantar, actualizar y respaldar; y un punto único de fallo — si Keycloak se cae, nadie entra a ninguna aplicación. OAuth2 no es “la versión buena” de las otras dos etapas: es la que resuelve el problema de *varias* aplicaciones. Para una API interna con tres usuarios, Basic con HTTPS sigue siendo una respuesta correcta.
 
-
-
 ## Las tres etapas, una al lado de la otra
-
-
 
 |  | 01 · Basic | 02 · JWT | 03 · OAuth2 |
 |---|---|---|---|
@@ -381,19 +264,11 @@ Rechazado. Y aquí está la idea con la que hay que cerrar el tema:
 | Complejidad | 1 clase | 2 clases + llaves | 1 clase + Keycloak |
 | Cuándo usarlo | scripts internos, APIs pequeñas, siempre con HTTPS | una API con su propio frontend | varias apps, usuarios externos, empresa |
 
-
-
-
 > NOTA: **Lo que no cambió en ninguna de las tres:** las reglas de autorización. `hasRole("ADMIN")` para borrar, `hasRole("MANAGER")` para crear. Abre los tres `SecurityConfig` uno al lado del otro y compruébalo — esa es la moraleja del tema completo. **Autenticar y autorizar son problemas separados, y solo el primero cambió tres veces.**
-
-
 
 ## Trampas de Keycloak
 
-
 ### 1. Account is not fully set up
-
-
 
 Creas el usuario, le pones contraseña, pides el token y Keycloak responde `invalid_grant` con ese mensaje. La causa: la contraseña quedó marcada como *temporal*, así que Keycloak exige cambiarla en el primer login — algo imposible por `curl`. La solución está en el script:
 
@@ -401,12 +276,7 @@ Creas el usuario, le pones contraseña, pides el token y Keycloak responde `inva
 kcadm.sh set-password -r academy --username john --new-password test123 --temporary=false
 ```
 
-
-
-
 ### 2. Roles que tú no pusiste
-
-
 
 El token de john trae cuatro roles, y tú solo le diste uno:
 
@@ -414,30 +284,17 @@ El token de john trae cuatro roles, y tú solo le diste uno:
 "roles": ["default-roles-academy", "EMPLOYEE", "offline_access", "uma_authorization"]
 ```
 
-
-
-
 Los otros tres se los pone Keycloak. Se convierten en `ROLE_offline_access` y compañía, y ahí se quedan sin estorbar — pero explican por qué la lista de autoridades es más larga de lo que esperas al depurar.
-
 
 ### 3. El issuer-uri tiene que coincidir exactamente
 
-
-
 Spring compara el claim `iss` del token contra tu `issuer-uri` carácter por carácter. `localhost` y `127.0.0.1` son cosas distintas; una barra final de más, también. Si no coinciden: `401`.
-
 
 ### 4. Keycloak tiene que estar arriba cuando arranca tu API
 
-
-
 Spring descarga la configuración del emisor *al arrancar*. Si Keycloak no responde todavía, la aplicación falla al iniciar. Arranca primero el contenedor y espera esos ~15 segundos.
 
-
-
 ## Errores comunes
-
-
 
 | Síntoma | Causa | Arreglo |
 |---|---|---|
@@ -449,13 +306,7 @@ Spring descarga la configuración del emisor *al arrancar*. Si Keycloak no respo
 | 401 a los 5 minutos, sin haber tocado nada | El token de Keycloak dura 300 s por defecto. | Pide otro, o usa el refresh_token . Es el comportamiento correcto. |
 | unauthorized_client al pedir el token | El client no tiene habilitado Direct Access Grants . | Actívalo (lo hace keycloak-setup.sh ) o usa el flujo con navegador. |
 
-
-
-
-
 ## Ejercicios
-
-
 
 - [ ]**1. Sigue el rastro de la llave** Partiendo solo del `issuer-uri`, llega con `curl` hasta la llave pública. Después compara el `kid` del header de un token con los del JWKS: ¿cuál de las dos llaves lo validó, y cómo lo sabes?
 
@@ -469,10 +320,8 @@ Spring descarga la configuración del emisor *al arrancar*. Si Keycloak no respo
 
 - [ ]**6. Cierra el tema** Abre los tres `SecurityConfig` a la vez. En una tabla de dos columnas escribe qué cambió y qué no. Después responde en tres renglones: para una API interna del equipo, con cinco usuarios, ¿cuál de las tres etapas elegirías y por qué?
 
-
-
-    Academia MTY · Seguridad y autenticación 03/03
-    Spring Boot 4.1.0 · Spring Security 7.1.0 · Keycloak 26.4
+Academia MTY · Seguridad y autenticación 03/03
+Spring Boot 4.1.0 · Spring Security 7.1.0 · Keycloak 26.4
 
 ---
 
@@ -701,7 +550,8 @@ spring.security.oauth2.resourceserver.jwt.issuer-uri=http://localhost:8090/realm
 		</plugins>
 	</build>
 
-</project>```
+</project>
+```
 
 ## CONFIGURACIÓN DE KEYCLOAK
 

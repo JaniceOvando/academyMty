@@ -354,14 +354,6 @@ public class Employee {
                 '}';
     }
 }
-
-
-
-
-
-
-
-
 ```
 
 ### `01-security-basic/src/main/java/com/luv2code/springboot/cruddemo/dao/EmployeeRepository.java`
@@ -456,12 +448,6 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeRepository.deleteById(theId);
     }
 }
-
-
-
-
-
-
 ```
 
 ### `01-security-basic/src/main/java/com/luv2code/springboot/cruddemo/rest/EmployeeRestController.java`

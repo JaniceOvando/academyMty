@@ -12,7 +12,9 @@ TEMA="$(dirname "$AQUI")"
 cd "$TEMA"
 
 md() { python3 "$AQUI/html2md.py" "$1"; }
-vuelca() { echo; echo "### \`$1\`"; echo; echo '```'"${2:-}"; cat "$1"; echo '```'; }
+# printf garantiza el salto final: el pom.xml no lo trae y la marca de cierre
+# se pegaba a </project>, dejando el bloque sin cerrar.
+vuelca() { echo; echo "### \`$1\`"; echo; echo '```'"${2:-}"; printf '%s\n' "$(cat "$1")"; echo '```'; }
 
 # ---------------------------------------------------------------- 00 referencia
 {

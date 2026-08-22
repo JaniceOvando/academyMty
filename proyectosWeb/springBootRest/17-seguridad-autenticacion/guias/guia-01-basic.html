@@ -441,6 +441,19 @@ footer .wrap{
 }
 .stage b{display:block;margin-bottom:.15rem;font-size:.95rem}
 .stage.now{border-color:var(--accent);border-left-width:3px}
+figure.poster{
+  margin:0 0 1.4rem;
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-radius:var(--radius);
+  padding:.9rem;
+}
+figure.poster img{display:block;width:100%;height:auto;border-radius:6px}
+figure.poster figcaption{
+  font-family:"JetBrains Mono",monospace;
+  font-size:var(--tiny);color:var(--ink-3);
+  margin-top:.7rem;line-height:1.5;
+}
 .toc a.cur{color:var(--ink);font-weight:600;background:var(--surface-2)}
 .toc a.cur .n{color:var(--ink-2)}
 </style>
@@ -591,6 +604,14 @@ footer .wrap{
 <section id="cadena">
   <p class="rubric">El mecanismo</p>
   <h2 class="sec"><span class="num">03</span> La cadena de filtros</h2>
+  <p>Antes del detalle técnico, la idea completa en una imagen. Tu petición sale llevando las credenciales <strong>a la vista</strong>, cruza al servidor y atraviesa <strong>dos controles distintos</strong>: de cada uno puede salir rechazada, y por motivos que no son el mismo.</p>
+
+  <figure class="poster">
+    <img src="img/fig-01-basic-flujo.png"
+         alt="Un portátil envía una petición dibujada como una postal abierta con el usuario john y la contraseña test123 legibles, apoyada en un cristal transparente rotulado base64. Debajo, escondido tras un muro, alguien con prismáticos lee la misma contraseña. La petición entra en un recinto punteado rotulado SERVER y atraviesa dos puertas: la primera pregunta WHO ARE YOU y de ella sale una flecha roja marcada 401; la segunda pregunta WHAT CAN YOU DO y de ella sale otra flecha roja marcada 403. Quien supera las dos llega por una flecha verde marcada 200 hasta una caja fuerte abierta con las fichas de los empleados.">
+    <figcaption>Fig. 1 — Las credenciales viajan legibles: base64 es un cristal, no una cerradura. Dentro del servidor hay dos controles, y cada uno rechaza por su cuenta. Ojo: al fisgón le funciona porque la petición va <strong>sin HTTPS</strong>; con TLS solo vería ruido.</figcaption>
+  </figure>
+
   <p>Spring Security no vive dentro de tu controlador. Vive <em>antes</em>. Se mete en la fila de filtros por la que pasa todo request antes de que Tomcat se lo entregue a Spring MVC:</p>
 
   <div class="flow">
@@ -644,7 +665,7 @@ footer .wrap{
         <text x="342" y="388" font-size="11" fill="var(--ink-2)">sin una sola línea modificada</text>
       </g>
     </svg>
-    <p class="fig">Fig. 1 — Todo request pasa por los filtros antes de tocar tu controlador. Los dos rechazos salen por la derecha.</p>
+    <p class="fig">Fig. 2 — El mismo recorrido, con los nombres reales de los filtros. Todo request los atraviesa antes de tocar tu controlador.</p>
   </div>
 
   <p>Esa es la idea que hay que llevarse de esta etapa, porque las tres etapas del curso usan <strong>la misma cadena</strong>. En JWT y en OAuth2 solo cambia el primer filtro: quién valida y contra qué. El controlador nunca se entera de que existe la seguridad — y por eso <code>EmployeeRestController</code> queda idéntico al del proyecto 16.</p>
@@ -983,7 +1004,7 @@ footer .wrap{
     <li><span class="box">[ ]</span><span><b>2. Degrada a susan</b> Quítale <code>ROLE_ADMIN</code> en la tabla <code>roles</code> y reinicia. ¿Qué código devuelve ahora su DELETE? Explica por qué es <code>403</code> y no <code>401</code>.</span></li>
     <li><span class="box">[ ]</span><span><b>3. Abre una puerta</b> Haz que <code>GET /api/employees</code> sea público (sin credenciales) pero que el resto siga protegido. Pista: <code>permitAll()</code>. Y responde: ¿por qué el <em>orden</em> de los <code>requestMatchers</code> importa?</span></li>
     <li><span class="box">[ ]</span><span><b>4. Rompe CSRF a propósito</b> Comenta la línea <code>http.csrf(...)</code>, reinicia y prueba un POST con mary. Anota el código exacto y el cuerpo de la respuesta. Ahora ya reconoces ese error cuando te pase de verdad.</span></li>
-    <li><span class="box">[ ]</span><span><b>5. Mira la cadena</b> Activa <code>logging.level.org.springframework.security=DEBUG</code>, haz un GET y cuenta cuántos filtros atraviesa el request. Encuentra en la lista los dos de la Fig. 1.</span></li>
+    <li><span class="box">[ ]</span><span><b>5. Mira la cadena</b> Activa <code>logging.level.org.springframework.security=DEBUG</code>, haz un GET y cuenta cuántos filtros atraviesa el request. Encuentra en la lista los dos de la Fig. 2.</span></li>
     <li><span class="box">[ ]</span><span><b>6. Piensa como atacante</b> Estás en el WiFi de un café y tu compañero usa esta API sin HTTPS. Describe, en tres pasos, cómo obtendrías su contraseña. Luego di qué cambia exactamente si la API usara HTTPS.</span></li>
   </ul>
 

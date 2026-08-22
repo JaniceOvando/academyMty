@@ -15,17 +15,11 @@ Seguridad 01 — HTTP Basic
 
 -
 
-
-
-
 Spring Boot 4.1 · Spring Security 7.1 · Guía de laboratorio · 01 de 03
 
 # Cerrar la puerta: HTTP Basic
 
-
-
 La API que construiste en el proyecto 16 funciona perfecto y tiene un problema: cualquiera que sepa la URL puede borrar a todos tus empleados. En esta guía le pones usuarios, contraseñas y roles — sin tocar una sola línea del CRUD que ya escribiste.
-
 
 - ~45 min
 
@@ -37,13 +31,7 @@ La API que construiste en el proyecto 16 funciona perfecto y tiene un problema: 
 
 - Spring Security 7.1
 
-
-
-
-
 ## 00 Poner en marcha
-
-
 
 - [ ]**Java 21 o superior** `java -version` debe decir `21` o más.
 
@@ -58,18 +46,22 @@ La API que construiste en el proyecto 16 funciona perfecto y tiene un problema: 
 $ docker start mysql-9.7
 
 # 2. las tablas de usuarios (solo la primera vez)
-$ docker exec -i mysql-9.7 mysql -uroot -pTU_PASSWORD employee_directory
+$ docker exec -i mysql-9.7 mysql -uroot -pTU_PASSWORD employee_directory < ../sql-scripts/01-security-tables.sql
 
+# 3. arrancar esta aplicación — escucha en el 8071
+$ cd 01-security-basic
+$ ./mvnw spring-boot:run
+
+# 4. comprobar que quedó cerrada
+$ curl -i http://localhost:8071/api/employees
+HTTP/1.1 401
+```
 
 > NOTA: Si el paso 2 falla o no sabes la contraseña de root, todo el detalle está en `17-seguridad-autenticacion/instalacion.txt`. Ese `401` del paso 4 no es un error: es la señal de que la seguridad ya está puesta.
 
-> ATENCION: **Si trabajas en Windows.** Los comandos de arriba son de macOS y Linux. En PowerShell: usa `mvnw.cmd spring-boot:run` en lugar de `./mvnw`, y si un comando ocupa varias líneas, la barra `\` del final se cambia por acento grave ```. Los scripts `.sh` de la carpeta `guias/` necesitan **Git Bash** o **WSL**; en `instalacion.txt` están las versiones para PowerShell.
-
-
+> ATENCION: **Si trabajas en Windows.** Los comandos de arriba son de macOS y Linux. En PowerShell: usa `mvnw.cmd spring-boot:run` en lugar de `./mvnw`, y si un comando ocupa varias líneas, la barra `\` del final se cambia por acento grave `` ` ``. Los scripts `.sh` de la carpeta `guias/` necesitan **Git Bash** o **WSL**; en `instalacion.txt` están las versiones para PowerShell.
 
 ## 01 La API desnuda
-
-
 
 Arranca el proyecto 16 — el de la semana pasada, el que funciona — y ejecuta esto desde cualquier terminal de la red:
 
@@ -78,87 +70,55 @@ $ curl -X DELETE http://localhost:8070/api/employees/1
 Deleted employee id - 1
 ```
 
-
-
-
-
 Sin usuario. Sin contraseña. Sin preguntas. El empleado ya no existe.
-
 
 No es un bug: es *exactamente* lo que programaste. Un `@RestController` responde a quien le hable. Nunca le dijiste que preguntara quién es el que llama, así que no pregunta.
 
-
 > ATENCION: **Esto es la norma, no la excepción.** Una API sin seguridad es una base de datos con una URL pública enfrente. Lo único que protegía tus datos hasta hoy era que nadie más conocía el puerto.
-
 
 ### El plan de las tres etapas
 
-
-
 La pregunta “¿cómo le demuestro a la API quién soy?” tiene tres respuestas famosas, y vas a implementar las tres. Cada una arregla un defecto de la anterior:
 
+01
+**HTTP Basic** — mandas tu usuario y contraseña en cada petición. La prueba *es* el secreto. Simple, y por eso mismo frágil.
 
-    01
-    **HTTP Basic** — mandas tu usuario y contraseña en cada petición. La prueba *es* el secreto. Simple, y por eso mismo frágil.
+02
+**JWT** — te identificas una vez y recibes un pase firmado con fecha de caducidad. Dejas de mandar la contraseña en cada llamada.
 
-
-    02
-    **JWT** — te identificas una vez y recibes un pase firmado con fecha de caducidad. Dejas de mandar la contraseña en cada llamada.
-
-
-    03
-    **OAuth2** — el pase lo emite un tercero de confianza. Tu API deja de conocer contraseñas: ni siquiera tiene tabla de usuarios.
-
-
-
+03
+**OAuth2** — el pase lo emite un tercero de confianza. Tu API deja de conocer contraseñas: ni siquiera tiene tabla de usuarios.
 
 ## 02 Dos preguntas distintas
 
-
-
 Casi todo el tema se ordena solo cuando separas dos preguntas que suenan parecido y no lo son:
-
-
 
 | Pregunta | Nombre | Ejemplo | Si falla |
 |---|---|---|---|
 | ¿Quién eres? | Autenticación authentication | “Soy john, y esta es mi contraseña.” | 401 Unauthorized |
 | ¿Qué puedes hacer? | Autorización authorization | “john puede leer, pero no borrar.” | 403 Forbidden |
 
-
-
-
 > NOTA: **Los dos códigos están mal nombrados y confunden a todo el mundo.** El `401` se llama *Unauthorized* pero significa “no autenticado”: no sé quién eres. El `403` es el que de verdad habla de autorización: sé perfectamente quién eres, y no te toca. Aprende a leerlos así y vas a depurar el doble de rápido: **401 = revisa tus credenciales; 403 = revisa tus roles.**
-
 
 ### Y una tercera pregunta, que es la del curso
 
-
-
 Autenticación y autorización son *qué*. La pregunta que separa a Basic de JWT y de OAuth2 es otra: **¿cómo viaja la prueba de quién eres, y quién la emitió?** Con Basic, la prueba es tu contraseña y la emites tú, en cada petición. Guarda esa frase: en la etapa 02 vas a ver cómo cambia.
-
-
 
 ## 03 La cadena de filtros
 
+Antes del detalle técnico, la idea completa en una imagen. Tu petición sale llevando las credenciales **a la vista**, cruza al servidor y atraviesa **dos controles distintos**: de cada uno puede salir rechazada, y por motivos que no son el mismo.
 
+> **Imagen:** Un portátil envía una petición dibujada como una postal abierta con el usuario john y la contraseña test123 legibles, apoyada en un cristal transparente rotulado base64. Debajo, escondido tras un muro, alguien con prismáticos lee la misma contraseña. La petición entra en un recinto punteado rotulado SERVER y atraviesa dos puertas: la primera pregunta WHO ARE YOU y de ella sale una flecha roja marcada 401; la segunda pregunta WHAT CAN YOU DO y de ella sale otra flecha roja marcada 403. Quien supera las dos llega por una flecha verde marcada 200 hasta una caja fuerte abierta con las fichas de los empleados.
+
+Fig. 1 — Las credenciales viajan legibles: base64 es un cristal, no una cerradura. Dentro del servidor hay dos controles, y cada uno rechaza por su cuenta. Ojo: al fisgón le funciona porque la petición va **sin HTTPS**; con TLS solo vería ruido.
 
 Spring Security no vive dentro de tu controlador. Vive *antes*. Se mete en la fila de filtros por la que pasa todo request antes de que Tomcat se lo entregue a Spring MVC:
 
-
-
-
 > **Diagrama:** curl / navegador · Authorization: Basic am9objp0ZXN0MTIz · SECURITYFILTERCHAIN · BasicAuthenticationFilter · decodifica base64 → busca en members → compara BCrypt · AuthorizationFilter · compara tus roles contra las reglas de filterChain() · 401 · no sé quién eres · 403 · sé quién eres, no te toca · pasa · DispatcherServlet · EmployeeRestController · tu código del proyecto 16 · sin una sola línea modificada
 
-
-
-Fig. 1 — Todo request pasa por los filtros antes de tocar tu controlador. Los dos rechazos salen por la derecha.
-
-
-
+Fig. 2 — El mismo recorrido, con los nombres reales de los filtros. Todo request los atraviesa antes de tocar tu controlador.
 
 Esa es la idea que hay que llevarse de esta etapa, porque las tres etapas del curso usan **la misma cadena**. En JWT y en OAuth2 solo cambia el primer filtro: quién valida y contra qué. El controlador nunca se entera de que existe la seguridad — y por eso `EmployeeRestController` queda idéntico al del proyecto 16.
-
 
 > NOTA: **No te lo imagines: míralo.** Descomenta esta línea en `application.properties` y Spring te imprime, en cada petición, la lista completa de filtros que atravesó:
 
@@ -166,39 +126,24 @@ Esa es la idea que hay que llevarse de esta etapa, porque las tres etapas del cu
 logging.level.org.springframework.security=DEBUG
 ```
 
-
-
-
-
 ## 04 Preparar el terreno
 
-
 ### 1. La dependencia
-
-
 
 Una sola, en el `pom.xml`:
 
 ```
-
-    org.springframework.boot
-    spring-boot-starter-security
-
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
 ```
-
-
-
-
 
 Antes de escribir nada más, arranca la app y mira la consola. Vas a encontrar una línea así:
 
 ```
 Using generated security password: 809b7001-dd01-4a94-b0ee-681936fc82e5
 ```
-
-
-
-
 
 Y ahora la API ya está cerrada, sin haber escrito una línea de código:
 
@@ -211,37 +156,24 @@ $ curl -u user:809b7001-dd01-4a94-b0ee-681936fc82e5 http://localhost:8071/api/em
 [{"firstName":"Patrobas", ...}]
 ```
 
-
-
-
 > NOTA: **Esto es Spring Boot en su forma más pura:** agregas una dependencia y el comportamiento por defecto es *seguro* (todo cerrado), no *cómodo* (todo abierto). La contraseña cambia en cada arranque, precisamente para que no se te ocurra usarla en serio. Todo lo que sigue existe para reemplazar ese usuario de juguete por usuarios de verdad.
 
-
 ### 2. Las tablas de usuarios
-
-
 
 Los usuarios van en la misma base `employee_directory`, en dos tablas nuevas. Ejecuta el script `sql-scripts/01-security-tables.sql`:
 
 ```
 $ docker start mysql-9.7
-$ docker exec -i mysql-9.7 mysql -uroot -pTU_PASSWORD employee_directory
-
-
+$ docker exec -i mysql-9.7 mysql -uroot -pTU_PASSWORD employee_directory < sql-scripts/01-security-tables.sql
+```
 
 Quedan así — `members` con las contraseñas, `roles` con los permisos:
-
-
 
 | Usuario | Contraseña | Roles | Puede |
 |---|---|---|---|
 | john | test123 | EMPLOYEE | leer |
 | mary | test123 | EMPLOYEE MANAGER | leer, crear, modificar |
 | susan | test123 | EMPLOYEE MANAGER ADMIN | todo, incluido borrar |
-
-
-
-
 
 Abre la tabla `members` y mira la columna `pw`. Los tres usuarios tienen **la misma contraseña**, y sin embargo:
 
@@ -251,23 +183,13 @@ mary   {bcrypt}$2y$10$y0UvRlnLKlOh7nBfH8sNvuXUIVhvwOMYaz1ysyJoPYvwY8tCg.K/i
 susan  {bcrypt}$2y$10$6eOesXl7A1E7kaE7UYulPu4h5o5r6Yqd/F/dPFMWx2kDTZA64qU1W
 ```
 
-
-
-
-
 Tres hashes completamente distintos para la palabra `test123`. Eso no es un error: es el **salt**, y es la razón por la que BCrypt sigue siendo la respuesta correcta en 2026. Lo desarmamos en la sección de referencia.
-
 
 > ATENCION: **El prefijo `{bcrypt}` no es decorativo.** Es como Spring sabe con qué algoritmo comparar. Si lo omites, el arranque truena con `There is no PasswordEncoder mapped for the id "null"`. Y sí, la columna es `char(68)` por una razón exacta: 8 caracteres de `{bcrypt}` + 60 del hash = 68.
 
-
-
 ## 05 El código: dos beans
 
-
-
 Toda la seguridad de este proyecto cabe en una clase, `security/SecurityConfig.java`, con dos beans que responden a las dos preguntas de la sección 02.
-
 
 ### Bean 1 — ¿de dónde salen los usuarios?
 
@@ -287,12 +209,7 @@ public UserDetailsService userDetailsService(DataSource theDataSource) {
 }
 ```
 
-
-
-
-
 Spring trae un esquema por defecto (tablas `users` y `authorities`). Si usaras esos nombres exactos, `new JdbcUserDetailsManager(dataSource)` bastaría y las dos consultas sobrarían. Las nuestras se llaman `members` y `roles`, así que hay que decirle cómo buscar: **Spring no adivina tu esquema**. El `?` de cada consulta es el username.
-
 
 ### Bean 2 — ¿quién puede hacer qué?
 
@@ -317,15 +234,9 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 }
 ```
 
-
-
-
 > ATENCION: **La trampa número uno del tema.** En la base de datos el rol se guarda como `ROLE_EMPLOYEE`, pero en Java se escribe `hasRole("EMPLOYEE")`, *sin* el prefijo: Spring lo agrega solo. Si escribes `hasRole("ROLE_EMPLOYEE")`, buscará `ROLE_ROLE_EMPLOYEE`, no lo va a encontrar nunca, y vas a recibir `403` en todo sin ninguna pista de por qué. (Si prefieres escribirlo completo, existe `hasAuthority("ROLE_EMPLOYEE")`, que no agrega nada.)
 
-
 ### Las tres líneas del final
-
-
 
 - `httpBasic(...)` — activa HTTP Basic. Es lo que hace que Spring devuelva la cabecera `WWW-Authenticate` y lea la cabecera `Authorization`.
 
@@ -333,19 +244,11 @@ public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
 - `sessionCreationPolicy(STATELESS)` — el servidor no guarda nada entre peticiones. Cada request llega con sus credenciales y se autentica desde cero. Eso es ser *stateless*, y es la razón por la que Basic manda la contraseña una y otra vez.
 
-
-
 > NOTA: **Fíjate en lo que NO cambió:** `EmployeeRestController`, `EmployeeService`, `EmployeeRepository` y `Employee` son byte por byte los del proyecto 16. Toda la seguridad entró por un archivo nuevo y una dependencia. Eso es la cadena de filtros trabajando.
-
-
 
 ## 06 La matriz de roles
 
-
-
 Esta es la tabla que tu configuración acaba de crear. Cada celda es comprobable desde la terminal:
-
-
 
 | Operación | Rol necesario | john | mary | susan |
 |---|---|---|---|---|
@@ -354,10 +257,6 @@ Esta es la tabla que tu configuración acaba de crear. Cada celda es comprobable
 | PUT /api/employees | MANAGER | 403 | 200 | 200 |
 | PATCH /api/employees/{id} | MANAGER | 403 | 200 | 200 |
 | DELETE /api/employees/{id} | ADMIN | 403 | 403 | 200 |
-
-
-
-
 
 Las cuatro pruebas que más enseñan, con la salida real:
 
@@ -380,15 +279,9 @@ $ curl -u susan:test123 -X DELETE http://localhost:8071/api/employees/5
 Deleted employee id - 5
 ```
 
-
-
-
 > NOTA: **Compara la 3 con la 1.** Son fallos distintos y el código lo dice: en la 1 la API no sabe quién llama (`401`); en la 3 sabe perfectamente que es john, y por eso puede decirle que no (`403`). Ese par es la pregunta de examen más probable de todo el tema.
 
-
 ### La matriz completa, automatizada
-
-
 
 El script `guias/test-endpoints.sh` corre las seis comprobaciones de la matriz, marca cada una con `OK` o `!!`, y crea y borra un empleado temporal para que tus datos queden como estaban:
 
@@ -400,13 +293,7 @@ OK  mary                   DELETE -> HTTP 403   (esperado 403)
 OK  susan                  DELETE -> HTTP 200   (esperado 200)
 ```
 
-
-
-
-
 ## 07 El talón de Aquiles
-
-
 
 Ya tienes la API protegida. Ahora vamos a romperla. Pregunta: cuando escribes `-u john:test123`, ¿qué manda curl exactamente?
 
@@ -415,10 +302,6 @@ $ curl -v -u john:test123 http://localhost:8071/api/employees
 > Authorization: Basic am9objp0ZXN0MTIz
 ```
 
-
-
-
-
 Se ve cifrado. No lo está. Es **base64**, que no es un algoritmo de seguridad sino de empaquetado — y se revierte con un comando que ya tienes instalado:
 
 ```
@@ -426,19 +309,11 @@ $ echo -n 'am9objp0ZXN0MTIz' | base64 -d
 john:test123
 ```
 
-
-
-
-
 Usuario y contraseña, en claro, en un solo paso y sin fuerza bruta. Y no viajan una vez: viajan **en cada petición**, porque la app es stateless.
-
 
 > ATENCION: **Conclusión operativa: HTTP Basic sin HTTPS es mandar la contraseña en texto plano.** Cualquiera con acceso al tráfico — un WiFi público, un proxy corporativo, un log mal configurado — la lee. Basic *no* está prohibido en producción: está prohibido *sin TLS*. Y fíjate en el detalle cruel: tu contraseña acaba también en los logs de acceso, en el historial de tu terminal y en la memoria de cualquier cliente que la reenvíe.
 
-
 ### Los cuatro defectos que arregla la etapa 02
-
-
 
 - **La contraseña viaja siempre.** Mil peticiones son mil oportunidades de interceptarla.
 
@@ -448,16 +323,9 @@ Usuario y contraseña, en claro, en un solo paso y sin fuerza bruta. Y no viajan
 
 - **No se puede acotar.** No puedes dar acceso “solo de lectura y solo por una hora” a una app de terceros: o le das la contraseña completa, o nada.
 
-
-
-
 Los cuatro tienen el mismo origen: **la prueba de identidad es el secreto mismo**. La etapa 02 lo cambia por un pase firmado, temporal y revocable. Eso es JWT.
 
-
-
 ## BCrypt y el salt
-
-
 
 Recuerda los tres hashes distintos para la misma contraseña. Así se lee uno:
 
@@ -470,10 +338,6 @@ $2y$ 10 $ q5C89SItU5ZKPZlTspXrZO Ocm7njHEeRF7dys6b.Bgo7NhKWbMGfG
   └─ versión del algoritmo
 ```
 
-
-
-
-
 - **El salt va dentro del hash.** No hay que guardarlo aparte — por eso dos usuarios con la misma contraseña tienen hashes distintos, y por eso *mirar la tabla no te dice quién repitió contraseña*.
 
 - **El coste es deliberadamente lento.** MD5 y SHA-256 están diseñados para ser rápidos: una GPU prueba miles de millones por segundo. BCrypt está diseñado para ser *lento*, y el coste se sube cada pocos años conforme el hardware mejora.
@@ -482,19 +346,11 @@ $2y$ 10 $ q5C89SItU5ZKPZlTspXrZO Ocm7njHEeRF7dys6b.Bgo7NhKWbMGfG
 
 - **Nunca escribas tu propio hash.** Ni MD5, ni SHA con salt casero, ni “yo le doy la vuelta al string”. Este es el ejemplo clásico de no inventar tu propia criptografía.
 
-
-
 > NOTA: **¿Y cómo genero un hash para un usuario nuevo?** Con la herramienta que ya viene en macOS y Linux: `htpasswd -bnBC 10 "" mipassword`. Copia lo que sale después de los dos puntos y pégalo en la columna `pw` precedido de `{bcrypt}`.
-
-
 
 ## Por qué los tutoriales de internet no te van a funcionar
 
-
-
 Este proyecto usa **Spring Boot 4.1 con Spring Security 7.1**. Casi todo lo que vas a encontrar buscando “spring security rest api” — vídeos, blogs, respuestas de Stack Overflow, y también lo que te conteste una IA — está escrito para Boot 3 y Security 6, o peor, para Boot 2 y Security 5. **Ese código no compila aquí.** Traducción rápida:
-
-
 
 | Lo que vas a encontrar | Lo que va aquí | Desde |
 |---|---|---|
@@ -505,16 +361,9 @@ Este proyecto usa **Spring Boot 4.1 con Spring Security 7.1**. Casi todo lo que 
 | spring-boot-starter-web | spring-boot-starter-webmvc | Boot 4.0 |
 | spring-boot-starter-oauth2-resource-server | spring-boot-starter-security-oauth2-resource-server | Boot 4.0 etapa 03 |
 
-
-
-
 > ATENCION: **Esto no es un obstáculo del curso, es el curso.** La habilidad que separa a un junior de alguien que se puede soltar solo no es memorizar la API de este año: es abrir las notas de versión, mirar la fecha del tutorial antes de copiarlo, y confiar en el compilador por encima del blog. Regla práctica: **si el ejemplo no dice para qué versión es, asume que está viejo.**
 
-
-
 ## Errores comunes
-
-
 
 | Síntoma | Causa | Arreglo |
 |---|---|---|
@@ -527,13 +376,7 @@ Este proyecto usa **Spring Boot 4.1 con Spring Security 7.1**. Casi todo lo que 
 | Cambié la contraseña en la tabla y sigue sin entrar | Guardaste el texto plano, no el hash. | Genera el hash con htpasswd -bnBC 10 "" nueva y guárdalo con el prefijo. |
 | Port 8071 was already in use | Ya tienes esta app corriendo, en otra terminal o en Eclipse. | lsof -i :8071 y mata el proceso, o cambia server.port . |
 
-
-
-
-
 ## Ejercicios
-
-
 
 - [ ]**1. Un usuario nuevo** Crea a `peter` con rol EMPLOYEE y contraseña `abc123`, generando tú el hash. Compruébalo con curl: debe leer y no debe poder crear.
 
@@ -543,17 +386,14 @@ Este proyecto usa **Spring Boot 4.1 con Spring Security 7.1**. Casi todo lo que 
 
 - [ ]**4. Rompe CSRF a propósito** Comenta la línea `http.csrf(...)`, reinicia y prueba un POST con mary. Anota el código exacto y el cuerpo de la respuesta. Ahora ya reconoces ese error cuando te pase de verdad.
 
-- [ ]**5. Mira la cadena** Activa `logging.level.org.springframework.security=DEBUG`, haz un GET y cuenta cuántos filtros atraviesa el request. Encuentra en la lista los dos de la Fig. 1.
+- [ ]**5. Mira la cadena** Activa `logging.level.org.springframework.security=DEBUG`, haz un GET y cuenta cuántos filtros atraviesa el request. Encuentra en la lista los dos de la Fig. 2.
 
 - [ ]**6. Piensa como atacante** Estás en el WiFi de un café y tu compañero usa esta API sin HTTPS. Describe, en tres pasos, cómo obtendrías su contraseña. Luego di qué cambia exactamente si la API usara HTTPS.
 
-
-
 > NOTA: **Siguiente parada:** etapa 02 — JWT. Vas a dejar de mandar la contraseña en cada petición y a cambiarla por un pase firmado con fecha de caducidad. Todo lo que construiste hoy (las tablas, BCrypt, los roles, la cadena de filtros) se queda: solo cambia lo que viaja en la cabecera `Authorization`.
 
-
-    Academia MTY · Seguridad y autenticación 01/03
-    Spring Boot 4.1.0 · Spring Security 7.1.0 · Java 21
+Academia MTY · Seguridad y autenticación 01/03
+Spring Boot 4.1.0 · Spring Security 7.1.0 · Java 21
 
 ---
 
@@ -758,4 +598,5 @@ server.port=8071
 		</plugins>
 	</build>
 
-</project>```
+</project>
+```
