@@ -568,7 +568,11 @@ figure.poster figcaption{
   <p class="rubric">Escalón tres</p>
   <h2 class="sec"><span class="num">04</span> Que la guarde otro</h2>
 
-  <p>Último escalón, y el que cambia de categoría. Los dos anteriores mejoraban <em>cómo</em> viaja la prueba. Este cambia <strong>quién la emite</strong>.</p>
+  <p>Empecemos por algo que ya has hecho cien veces. Entras a una web nueva y en vez de inventarte otra contraseña pulsas <strong>“Continuar con Google”</strong>. Se abre una pantalla de Google, escribes ahí tu contraseña, y vuelves a la web original ya identificado.</p>
+
+  <p>Piensa un segundo en lo que acaba de pasar: <strong>esa web nunca vio tu contraseña de Google</strong>. Y sin embargo sabe quién eres. Eso es este tercer escalón, y lo llevas usando años.</p>
+
+  <p>Los dos anteriores mejoraban <em>cómo</em> viaja la prueba. Este cambia <strong>quién la emite</strong>.</p>
 
   <figure class="poster">
     <img src="img/fig-03-oauth2-flujo.png" alt="Dos edificios separados. El de la izquierda es una recepción de hotel donde alguien entrega su contraseña por el mostrador; la contraseña se queda dentro y detrás de la recepcionista hay una estantería llena de fichas de personas. De la recepción sale una tarjeta llave con un nombre, un rol y un sello. El de la derecha es una habitación: la persona acerca la tarjeta a un lector, que la compara con un tablón público que muestra ese mismo sello. Detrás de la puerta solo hay una caja fuerte con fichas de empleados, ninguna estantería de personas. Aparte, una tarjeta de otro hotel es rechazada.">
@@ -578,6 +582,18 @@ figure.poster figcaption{
   <p><strong>Cuenta las estanterías.</strong> A la izquierda hay un mueble entero lleno de fichas de personas. A la derecha no hay ninguna: solo una caja fuerte con datos de trabajo. Esa asimetría es todo el escalón.</p>
 
   <p>Tu aplicación deja de saber contraseñas. No es que las guarde mejor: <strong>no las tiene</strong>. Si mañana te la comprometen, no hay credenciales que filtrar, porque no había.</p>
+
+  <h3>Una llave, muchas puertas</h3>
+
+  <p>Y aquí aparece la ventaja que justifica todo el montaje. En un hotel no te dan una llave por habitación, por el gimnasio y otra por la piscina: te dan <strong>una</strong>, y todas las puertas se fían de la misma recepción.</p>
+
+  <p>Traducido: si tienes cinco aplicaciones y las cinco apuntan al mismo emisor, el usuario entra <strong>una vez</strong> y las cinco lo reconocen. No hay cinco registros de usuarios que mantener, ni cinco formularios de “olvidé mi contraseña”, ni cinco sitios donde se pueda filtrar. Eso es lo que la gente llama <em>inicio de sesión único</em>.</p>
+
+  <h3>Prestar la llave sin prestar tu identidad</h3>
+
+  <p>Hay un segundo uso, y es el problema para el que se invent&oacute; todo esto. Imagina que una aplicación de fotos quiere leer tus archivos de la nube. Con los escalones anteriores solo tenías una opción: <strong>darle tu contraseña</strong>. Y con ella podría leer, borrar y cambiarte la clave.</p>
+
+  <p>Con este esquema le das una tarjeta acotada: sirve <em>solo</em> para leer fotos, caduca, y la puedes anular cuando quieras — sin que esa aplicación haya sabido nunca tu contraseña. Es la diferencia entre <strong>prestarle a alguien la llave de tu casa o abrirle solo el buzón</strong>.</p>
 
   <p>¿Y cómo confía la puerta en una tarjeta que no ha emitido? Por el tablón de la pared. El emisor publica su sello a la vista de todos, y la puerta compara. No necesita llamar a recepción, ni preguntar nada: el sello o cuadra o no cuadra.</p>
 
@@ -599,6 +615,8 @@ figure.poster figcaption{
       <tr><td>¿Caduca?</td><td>no</td><td>sí</td><td>sí, y además se puede anular</td></tr>
       <tr><td>¿Quién guarda las contraseñas?</td><td>tú</td><td>tú</td><td>el tercero</td></tr>
       <tr><td>Se consulta la lista de usuarios</td><td>en cada petición</td><td>solo al emitir el pase</td><td>ni eso</td></tr>
+      <tr><td>Un solo acceso para varias apps</td><td>no</td><td>no</td><td>sí</td></tr>
+      <tr><td>Dar acceso parcial a un tercero</td><td>imposible sin dar la contraseña</td><td>imposible sin dar la contraseña</td><td>sí, acotado y revocable</td></tr>
       <tr class="wrap-ok"><td><strong>Cuándo elegirlo</strong></td><td>algo interno y pequeño, siempre con HTTPS</td><td>una aplicación con su propio frontend</td><td>varias aplicaciones, o usuarios de fuera</td></tr>
     </tbody>
   </table>
