@@ -98,13 +98,17 @@ Y ahora el detalle que hace clic: **la puerta de tu habitación no llama a recep
 
 > ATENCION: **Fíjate en quién NO aparece nunca.** En todo el flujo, la contraseña de john jamás toca tu API. Solo la ve Keycloak. Si mañana te hackean la API, no hay contraseñas que robar — porque no las tienes.
 
+> **Imagen:** Dos edificios separados. El de la izquierda, rotulado KEYCLOAK, es una recepción de hotel: john entrega por el mostrador una tarjeta con un candado y una contraseña oculta, y una flecha roja muestra que entra y se queda ahí. Detrás de la recepcionista hay una estantería grande llena de cajas de fichas: ahí viven las identidades. De la recepción sale una tarjeta llave con el nombre john, el rol EMPLOYEE y un sello dorado. El de la derecha, rotulado YOUR API, es una habitación: john acerca la tarjeta a un lector y una flecha verde sube desde el lector hasta un tablón público colgado en la pared que muestra ese mismo sello dorado, así que la puerta decide sola. Detrás de la puerta abierta solo hay una caja fuerte verde con fichas de empleados: ninguna estantería de personas. Abajo a la derecha, en un recuadro aparte, una tarjeta roja a nombre de maria con un sello distinto es rechazada por el lector con una equis.
+
+Fig. 1 — La contraseña entra en Keycloak y no sale de ahí; las fichas de personas están en el edificio izquierdo y en el derecho no hay ninguna. La puerta valida contra el sello publicado en el tablón (el JWKS), sin preguntarle nada a recepción. Fíjate en maria: **mismo rol que john** y aun así no entra — lo que falla no es el permiso, es el emisor.
+
 ## 03 El flujo de verdad
 
 El flujo estándar se llama **Authorization Code + PKCE**. Es el que ocurre cuando pulsas “Continuar con Google”:
 
 > **Diagrama:** Client (la app) · Keycloak · tu API :8073 · 1 · te mando al login (con un reto PKCE) · 2 · john teclea su contraseña AQUÍ · 3 · vuelve un código de un solo uso · 4 · cambio el código por el token · 5 · access token (+ refresh token) · 6 · Authorization: Bearer  · 7 · valida la firma con el JWKS · sin preguntarle nada a Keycloak
 
-Fig. 1 — La contraseña solo aparece en el paso 2, y solo dentro de Keycloak.
+Fig. 2 — Los siete pasos del flujo real. La contraseña solo aparece en el paso 2, y solo dentro de Keycloak.
 
 **¿Por qué un código intermedio y no el token directo?** Porque el paso 3 viaja por el navegador (queda en el historial, en los logs, en la barra de direcciones). Un código de un solo uso y vida de segundos no sirve de nada si se filtra. El token va por el paso 4, que es una llamada directa de servidor a servidor. **PKCE** añade que quien canjea el código demuestre ser el mismo que lo pidió.
 
@@ -314,7 +318,7 @@ Spring descarga la configuración del emisor *al arrancar*. Si Keycloak no respo
 
 - [ ]**3. Desactívalo** Desactiva a susan en Keycloak y usa su token ya emitido. ¿Sigue entrando? Explícalo con lo que aprendiste en el proyecto 02 sobre la revocación.
 
-- [ ]**4. El flujo de verdad** Abre en el navegador la URL de `authorization_endpoint` con `client_id=employee-api`, `response_type=code` y `redirect_uri=http://localhost:8073/`. Entra como john y mira la barra de direcciones: ahí está el `code` del paso 3 de la Fig. 1.
+- [ ]**4. El flujo de verdad** Abre en el navegador la URL de `authorization_endpoint` con `client_id=employee-api`, `response_type=code` y `redirect_uri=http://localhost:8073/`. Entra como john y mira la barra de direcciones: ahí está el `code` del paso 3 de la Fig. 2.
 
 - [ ]**5. Rompe el issuer** Cambia `localhost` por `127.0.0.1` en el `issuer-uri`, reinicia y prueba. Anota el mensaje exacto del error: vas a reconocerlo el resto de tu carrera.
 

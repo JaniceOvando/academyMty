@@ -441,6 +441,19 @@ footer .wrap{
 }
 .stage b{display:block;margin-bottom:.15rem;font-size:.95rem}
 .stage.now{border-color:var(--accent);border-left-width:3px}
+figure.poster{
+  margin:0 0 1.4rem;
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-radius:var(--radius);
+  padding:.9rem;
+}
+figure.poster img{display:block;width:100%;height:auto;border-radius:6px}
+figure.poster figcaption{
+  font-family:"JetBrains Mono",monospace;
+  font-size:var(--tiny);color:var(--ink-3);
+  margin-top:.7rem;line-height:1.5;
+}
 .toc a.cur{color:var(--ink);font-weight:600;background:var(--surface-2)}
 .toc a.cur .n{color:var(--ink-2)}
 </style>
@@ -568,6 +581,12 @@ footer .wrap{
   <p>Y ahora el detalle que hace clic: <strong>la puerta de tu habitación no llama a recepción cada vez que metes la tarjeta.</strong> La puerta sabe reconocer una tarjeta legítima por sí sola. Eso es exactamente lo que hace tu API con la firma del token — y es la razón por la que un Resource Server escala sin convertir al Authorization Server en un cuello de botella.</p>
 
   <p class="note warn"><strong>Fíjate en quién NO aparece nunca.</strong> En todo el flujo, la contraseña de john jamás toca tu API. Solo la ve Keycloak. Si mañana te hackean la API, no hay contraseñas que robar — porque no las tienes.</p>
+
+  <figure class="poster">
+    <img src="img/fig-03-oauth2-flujo.png"
+         alt="Dos edificios separados. El de la izquierda, rotulado KEYCLOAK, es una recepción de hotel: john entrega por el mostrador una tarjeta con un candado y una contraseña oculta, y una flecha roja muestra que entra y se queda ahí. Detrás de la recepcionista hay una estantería grande llena de cajas de fichas: ahí viven las identidades. De la recepción sale una tarjeta llave con el nombre john, el rol EMPLOYEE y un sello dorado. El de la derecha, rotulado YOUR API, es una habitación: john acerca la tarjeta a un lector y una flecha verde sube desde el lector hasta un tablón público colgado en la pared que muestra ese mismo sello dorado, así que la puerta decide sola. Detrás de la puerta abierta solo hay una caja fuerte verde con fichas de empleados: ninguna estantería de personas. Abajo a la derecha, en un recuadro aparte, una tarjeta roja a nombre de maria con un sello distinto es rechazada por el lector con una equis.">
+    <figcaption>Fig. 1 — La contraseña entra en Keycloak y no sale de ahí; las fichas de personas están en el edificio izquierdo y en el derecho no hay ninguna. La puerta valida contra el sello publicado en el tablón (el JWKS), sin preguntarle nada a recepción. Fíjate en maria: <strong>mismo rol que john</strong> y aun así no entra — lo que falla no es el permiso, es el emisor.</figcaption>
+  </figure>
 </section>
 
 <section id="flujo">
@@ -619,7 +638,7 @@ footer .wrap{
         <text x="700" y="354" text-anchor="middle" font-size="10" fill="var(--put)">sin preguntarle nada a Keycloak</text>
       </g>
     </svg>
-    <p class="fig">Fig. 1 — La contraseña solo aparece en el paso 2, y solo dentro de Keycloak.</p>
+    <p class="fig">Fig. 2 — Los siete pasos del flujo real. La contraseña solo aparece en el paso 2, y solo dentro de Keycloak.</p>
   </div>
 
   <p><strong>¿Por qué un código intermedio y no el token directo?</strong> Porque el paso 3 viaja por el navegador (queda en el historial, en los logs, en la barra de direcciones). Un código de un solo uso y vida de segundos no sirve de nada si se filtra. El token va por el paso 4, que es una llamada directa de servidor a servidor. <strong>PKCE</strong> añade que quien canjea el código demuestre ser el mismo que lo pidió.</p>
@@ -894,7 +913,7 @@ footer .wrap{
     <li><span class="box">[ ]</span><span><b>1. Sigue el rastro de la llave</b> Partiendo solo del <code>issuer-uri</code>, llega con <code>curl</code> hasta la llave pública. Después compara el <code>kid</code> del header de un token con los del JWKS: ¿cuál de las dos llaves lo validó, y cómo lo sabes?</span></li>
     <li><span class="box">[ ]</span><span><b>2. Asciende a john</b> Dale <code>MANAGER</code> en la consola de Keycloak (<code>http://localhost:8090</code>). Prueba un POST con su token <em>viejo</em>: ¿funciona? Pide un token nuevo y vuelve a probar. Explica la diferencia.</span></li>
     <li><span class="box">[ ]</span><span><b>3. Desactívalo</b> Desactiva a susan en Keycloak y usa su token ya emitido. ¿Sigue entrando? Explícalo con lo que aprendiste en el proyecto 02 sobre la revocación.</span></li>
-    <li><span class="box">[ ]</span><span><b>4. El flujo de verdad</b> Abre en el navegador la URL de <code>authorization_endpoint</code> con <code>client_id=employee-api</code>, <code>response_type=code</code> y <code>redirect_uri=http://localhost:8073/</code>. Entra como john y mira la barra de direcciones: ahí está el <code>code</code> del paso 3 de la Fig. 1.</span></li>
+    <li><span class="box">[ ]</span><span><b>4. El flujo de verdad</b> Abre en el navegador la URL de <code>authorization_endpoint</code> con <code>client_id=employee-api</code>, <code>response_type=code</code> y <code>redirect_uri=http://localhost:8073/</code>. Entra como john y mira la barra de direcciones: ahí está el <code>code</code> del paso 3 de la Fig. 2.</span></li>
     <li><span class="box">[ ]</span><span><b>5. Rompe el issuer</b> Cambia <code>localhost</code> por <code>127.0.0.1</code> en el <code>issuer-uri</code>, reinicia y prueba. Anota el mensaje exacto del error: vas a reconocerlo el resto de tu carrera.</span></li>
     <li><span class="box">[ ]</span><span><b>6. Cierra el tema</b> Abre los tres <code>SecurityConfig</code> a la vez. En una tabla de dos columnas escribe qué cambió y qué no. Después responde en tres renglones: para una API interna del equipo, con cinco usuarios, ¿cuál de las tres etapas elegirías y por qué?</span></li>
   </ul>
