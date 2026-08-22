@@ -1,4 +1,6 @@
-# Etapa 02 — JWT (proyecto 02-security-jwt, puerto 8072)
+# 2026-08-22 · Etapa 02 — JWT
+
+Proyecto 02-security-jwt, puerto 8072.
 
 Segunda etapa. La contraseña deja de viajar en cada petición: se cambia una sola vez
 por un token JWT firmado con RSA (RS256) y con fecha de caducidad. Usa las MISMAS

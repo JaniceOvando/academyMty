@@ -1,6 +1,6 @@
-# Seguridad y autenticación en Spring Boot — Setup y referencia
+# 2026-08-22 · Setup y referencia
 
-Documento de referencia del tema "Seguridad y autenticación" del curso Academy MTY.
+Seguridad y autenticación en Spring Boot. Documento de referencia del tema "Seguridad y autenticación" del curso Academy MTY.
 Cubre la instalación del entorno, el código común a las tres etapas, los scripts de
 prueba y la comparativa final entre HTTP Basic, JWT y OAuth2.
 

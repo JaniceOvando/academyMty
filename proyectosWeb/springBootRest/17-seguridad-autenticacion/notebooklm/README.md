@@ -28,6 +28,36 @@ Dos decisiones de empaquetado, ambas medidas:
 - Las llaves `.pem` **no se incluyen**: no aportan nada al índice y una llave privada
   no debe circular.
 
+## El nombre de la fuente: por que empieza por la fecha
+
+Gemini Notebook **no deja elegir el nombre al subir**: lo toma de la primera linea
+del texto pegado. Y la barra lateral lo **corta a 50 caracteres**, sin tooltip que
+muestre el resto. Medido, no supuesto.
+
+Por eso el H1 de cada documento empieza por la fecha:
+
+    # 2026-08-22 · Etapa 01 — HTTP Basic
+
+Consecuencias practicas:
+
+- Cualquier sufijo del tipo `(v2)` al final **seria invisible**. La version va delante
+  o no va.
+- Al subir una version nueva junto a la vieja, las dos se distinguen de un vistazo y
+  ordenadas alfabeticamente quedan agrupadas por dia.
+- Se usa la fecha y no `v2` porque `v2` obliga a alguien a llevar la cuenta. La fecha
+  se pone sola y ademas dice si el material lleva meses sin actualizarse.
+- El detalle del proyecto y el puerto bajo al primer parrafo del cuerpo: ahi no
+  estorba y Gemini Notebook lo indexa igual.
+
+Si necesitas cambiar el nombre de una fuente **ya subida**, se puede desde la UI:
+menu de tres puntos de la fuente → *Rename source*. Eso solo cambia la etiqueta; no
+toca el contenido ni los Audio Overviews que cuelguen de ella.
+
+**Ojo con la reproducibilidad:** por el sello de fecha, regenerar en un dia distinto
+cambia el H1 aunque no haya cambiado nada del material. Es intencionado — el documento
+deja constancia de cuando se construyo — pero significa que `generar.sh` solo produce
+salida identica byte a byte **dentro del mismo dia**.
+
 ## SON ARCHIVOS DERIVADOS
 
 No los edites a mano. Si cambias una guía, un `SecurityConfig` o el `instalacion.txt`,

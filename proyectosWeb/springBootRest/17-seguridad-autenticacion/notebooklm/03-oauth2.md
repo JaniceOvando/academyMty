@@ -1,4 +1,6 @@
-# Etapa 03 — OAuth2 y OIDC (proyecto 03-security-oauth2, puerto 8073)
+# 2026-08-22 · Etapa 03 — OAuth2 y OIDC
+
+Proyecto 03-security-oauth2, puerto 8073.
 
 Tercera y última etapa. La API se convierte en Resource Server puro: deja de emitir
 tokens, deja de tener llaves y deja de tener tabla de usuarios. Los tokens los emite

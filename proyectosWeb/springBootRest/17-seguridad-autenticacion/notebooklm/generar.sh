@@ -11,6 +11,14 @@ AQUI="$(cd "$(dirname "$0")" && pwd)"
 TEMA="$(dirname "$AQUI")"
 cd "$TEMA"
 
+# Gemini Notebook toma el nombre de la fuente de la PRIMERA LINEA del texto
+# pegado, y la barra lateral lo corta a 50 caracteres sin tooltip. Por eso la
+# fecha va delante: es lo unico que distingue una version de otra de un vistazo,
+# y cualquier sufijo al final seria invisible.
+# Efecto colateral buscado: regenerar en otro dia cambia el H1, asi que el
+# documento deja constancia de cuando se construyo.
+HOY="$(date +%F)"
+
 md() { python3 "$AQUI/html2md.py" "$1"; }
 # printf garantiza el salto final: el pom.xml no lo trae y la marca de cierre
 # se pegaba a </project>, dejando el bloque sin cerrar.
@@ -18,10 +26,10 @@ vuelca() { echo; echo "### \`$1\`"; echo; echo '```'"${2:-}"; printf '%s\n' "$(c
 
 # ---------------------------------------------------------------- 00 referencia
 {
+echo "# $HOY · Setup y referencia"
 cat <<'EOF'
-# Seguridad y autenticación en Spring Boot — Setup y referencia
 
-Documento de referencia del tema "Seguridad y autenticación" del curso Academy MTY.
+Seguridad y autenticación en Spring Boot. Documento de referencia del tema "Seguridad y autenticación" del curso Academy MTY.
 Cubre la instalación del entorno, el código común a las tres etapas, los scripts de
 prueba y la comparativa final entre HTTP Basic, JWT y OAuth2.
 
@@ -127,7 +135,9 @@ vuelca 03-security-oauth2/guias/test-endpoints.sh bash
 
 # ---------------------------------------------------------------------- 01 basic
 {
-echo "# Etapa 01 — HTTP Basic (proyecto 01-security-basic, puerto 8071)"
+echo "# $HOY · Etapa 01 — HTTP Basic"
+echo
+echo "Proyecto 01-security-basic, puerto 8071."
 echo
 echo "Primera de las tres etapas del tema de seguridad. Protege con HTTP Basic la API REST"
 echo "de empleados del proyecto 16, con usuarios en MySQL y contraseñas cifradas con BCrypt."
@@ -145,7 +155,9 @@ vuelca 01-security-basic/pom.xml xml
 
 # ------------------------------------------------------------------------ 02 jwt
 {
-echo "# Etapa 02 — JWT (proyecto 02-security-jwt, puerto 8072)"
+echo "# $HOY · Etapa 02 — JWT"
+echo
+echo "Proyecto 02-security-jwt, puerto 8072."
 echo
 echo "Segunda etapa. La contraseña deja de viajar en cada petición: se cambia una sola vez"
 echo "por un token JWT firmado con RSA (RS256) y con fecha de caducidad. Usa las MISMAS"
@@ -172,7 +184,9 @@ echo '```'
 
 # --------------------------------------------------------------------- 03 oauth2
 {
-echo "# Etapa 03 — OAuth2 y OIDC (proyecto 03-security-oauth2, puerto 8073)"
+echo "# $HOY · Etapa 03 — OAuth2 y OIDC"
+echo
+echo "Proyecto 03-security-oauth2, puerto 8073."
 echo
 echo "Tercera y última etapa. La API se convierte en Resource Server puro: deja de emitir"
 echo "tokens, deja de tener llaves y deja de tener tabla de usuarios. Los tokens los emite"

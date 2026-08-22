@@ -1,4 +1,6 @@
-# Etapa 01 — HTTP Basic (proyecto 01-security-basic, puerto 8071)
+# 2026-08-22 · Etapa 01 — HTTP Basic
+
+Proyecto 01-security-basic, puerto 8071.
 
 Primera de las tres etapas del tema de seguridad. Protege con HTTP Basic la API REST
 de empleados del proyecto 16, con usuarios en MySQL y contraseñas cifradas con BCrypt.
