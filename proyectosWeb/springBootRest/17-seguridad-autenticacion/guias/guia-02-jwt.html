@@ -441,6 +441,19 @@ footer .wrap{
 }
 .stage b{display:block;margin-bottom:.15rem;font-size:.95rem}
 .stage.now{border-color:var(--accent);border-left-width:3px}
+figure.poster{
+  margin:0 0 1.4rem;
+  background:var(--surface);
+  border:1px solid var(--rule);
+  border-radius:var(--radius);
+  padding:.9rem;
+}
+figure.poster img{display:block;width:100%;height:auto;border-radius:6px}
+figure.poster figcaption{
+  font-family:"JetBrains Mono",monospace;
+  font-size:var(--tiny);color:var(--ink-3);
+  margin-top:.7rem;line-height:1.5;
+}
 .toc a.cur{color:var(--ink);font-weight:600;background:var(--surface-2)}
 .toc a.cur .n{color:var(--ink-2)}
 </style>
@@ -627,6 +640,12 @@ footer .wrap{
   <h2 class="sec"><span class="num">04</span> Taquilla y torniquete</h2>
   <p>Con JWT la aplicación tiene <strong>dos puertas distintas</strong>, y por eso el <code>SecurityConfig</code> tiene dos cadenas de filtros. Piensa en un concierto: compras el boleto una vez en la taquilla, y luego lo enseñas en el torniquete cada vez que entras.</p>
 
+  <figure class="poster">
+    <img src="img/fig-02-jwt-flujo.png"
+         alt="Dos bandas horizontales. Arriba, rotulada ONCE: john entrega en la ventanilla de una taquilla una tarjeta con una llave y una contraseña oculta; la tarjeta se queda dentro, marcada con una flecha roja que apunta al interior. El empleado consulta un archivador abierto lleno de fichas y de la taquilla sale un pase que muestra el nombre john, el rol EMPLOYEE, un reloj con 60:00 y un lacre rojo estampado con la palabra SEALED. Abajo, rotulada EVERY REQUEST: john cruza tres torniquetes seguidos enseñando solo el pase, sin ninguna contraseña, y al final el mismo archivador aparece cerrado con cadena y candado. En un recuadro punteado aparte, a la izquierda, el encapuchado con prismáticos lee el contenido del pase en un globo de pensamiento, y debajo su copia falsificada tiene el lacre partido en dos y una equis roja la rechaza.">
+    <figcaption>Fig. 1 — La contraseña entra en la taquilla y se queda ahí; a partir de entonces solo circula el pase. El archivador se consulta una vez y luego queda encadenado: validar el token no toca la base de datos. Ojo con el rincón del fisgón: lo que se rechaza es la <strong>falsificación</strong>, la del lacre roto. Un pase <strong>robado intacto</strong> sí funciona — hasta que el reloj llega a cero.</figcaption>
+  </figure>
+
   <div class="flow">
     <svg viewBox="0 0 860 440" role="img" aria-label="Flujo de login y uso del token">
       <defs>
@@ -694,7 +713,7 @@ footer .wrap{
         <text x="428" y="350" text-anchor="middle" font-size="10" fill="var(--put)">Todo lo que hace falta ya viene firmado dentro del token.</text>
       </g>
     </svg>
-    <p class="fig">Fig. 1 — Arriba la taquilla (una vez). Abajo el torniquete (cada petición).</p>
+    <p class="fig">Fig. 2 — El mismo reparto, con los nombres reales: qué cadena de filtros atiende cada puerta y con qué llave.</p>
   </div>
 
   <p>Ese recuadro de abajo es la ventaja operativa que hace famoso a JWT: <strong>validar un token no toca la base de datos</strong>. Con Basic, cada petición era una consulta a <code>members</code> más un cálculo de BCrypt (que, recuérdalo, es lento a propósito). Con JWT es una verificación de firma en memoria. Por eso escala.</p>
