@@ -21,7 +21,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class EmployeeRepository {
 
     /** Lo que tarda "la base de datos" en contestar. */
-    public static final Duration LATENCIA = Duration.ofMillis(300);
+    public static final Duration LATENCIA = Duration.ofMillis(5000); //5 Segundos
 
     private final Map<Integer, Employee> tabla = new ConcurrentHashMap<>(Map.of(
             1, new Employee(1, "Leslie",  "Andrews", "leslie@luv2code.com"),
