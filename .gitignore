@@ -33,3 +33,13 @@ target/
 !proyectosWeb/proyectoWar/jsp-student-tracker-bonus-search/web-student-tracker-solution.war
 *.ear
 hs_err_pid*
+
+# Material de apoyo binario y pesado (PDF, PNG y MP4 de ~30 MB en total).
+# Se consulta al estudiar el tema, pero no es fuente: si entra al repo se queda
+# en la historia de git para siempre y el clon pesa eso de mas para todos.
+proyectosWeb/springWebFlux/Conceptos/notebook/
+
+# Tema de testing: trabajo en curso, todavia no publicado al curso.
+# Anclado con "/" para que no se trague ningun directorio "testing" que pueda
+# existir DENTRO de un proyecto (ahi si seria codigo que se versiona).
+/testing/
