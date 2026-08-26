@@ -39,7 +39,3 @@ hs_err_pid*
 # en la historia de git para siempre y el clon pesa eso de mas para todos.
 proyectosWeb/springWebFlux/Conceptos/notebook/
 
-# Tema de testing: trabajo en curso, todavia no publicado al curso.
-# Anclado con "/" para que no se trague ningun directorio "testing" que pueda
-# existir DENTRO de un proyecto (ahi si seria codigo que se versiona).
-/testing/
