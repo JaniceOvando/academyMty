@@ -11,7 +11,6 @@ import reactor.core.publisher.Mono;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/lecturas")
@@ -113,20 +112,33 @@ public class LecturaRestController {
      *   curl http://localhost:8075/api/lecturas/resumen   (tarda 10 s)
      */
     @GetMapping(path = "/resumen", produces = MediaType.APPLICATION_JSON_VALUE)
-    public Mono<Map<String, Object>> resumen() {
+    public Mono<Resumen> resumen() {
         return sensor.lecturas()
                      .take(10)
                      .collectList()          // Flux<Lectura> -> Mono<List<Lectura>>
                      .map(this::estadisticas);
     }
 
-    private Map<String, Object> estadisticas(List<Lectura> ls) {
-        return Map.of(
-                "lecturas", ls.size(),
-                "minima",   ls.stream().mapToDouble(Lectura::celsius).min().orElse(0),
-                "maxima",   ls.stream().mapToDouble(Lectura::celsius).max().orElse(0),
-                "promedio", Math.round(ls.stream().mapToDouble(Lectura::celsius).average().orElse(0) * 10) / 10.0,
-                "masCaliente", ls.stream().max(Comparator.comparingDouble(Lectura::celsius)).orElseThrow()
+    /**
+     * OJO, AQUI EL ORDEN DE LOS CAMPOS IMPORTA. Esto era un Map.of(...) y el
+     * JSON salia con los campos barajados en cada arranque, sin coincidir con
+     * el que muestra la guia.
+     *
+     * Map.of() NO garantiza orden de iteracion, y Java lo ALEATORIZA EN CADA
+     * ARRANQUE de la JVM (ImmutableCollections.SALT, sembrado con nanoTime())
+     * para que nadie dependa de un orden que nunca se prometio. Con un record
+     * el orden es el de declaracion, siempre.
+     */
+    public record Resumen(int lecturas, double minima, double maxima,
+                          double promedio, Lectura masCaliente) {}
+
+    private Resumen estadisticas(List<Lectura> ls) {
+        return new Resumen(
+                ls.size(),
+                ls.stream().mapToDouble(Lectura::celsius).min().orElse(0),
+                ls.stream().mapToDouble(Lectura::celsius).max().orElse(0),
+                Math.round(ls.stream().mapToDouble(Lectura::celsius).average().orElse(0) * 10) / 10.0,
+                ls.stream().max(Comparator.comparingDouble(Lectura::celsius)).orElseThrow()
         );
     }
 }

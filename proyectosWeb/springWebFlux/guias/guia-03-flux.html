@@ -678,7 +678,7 @@ es.onerror = <span class="kw">function</span> () {
     <button class="copy" type="button">Copiar</button>
 <pre><code><span class="p">$</span> <span class="cmd">curl -s localhost:8075/api/lecturas/resumen</span>   <span class="cm"># tarda 10 s</span>
 <span class="out">{"lecturas":10,"minima":26.0,"maxima":34.0,"promedio":31.1,</span>
-<span class="out"> "masCaliente":{"numero":5,"celsius":34.0,"hora":"14:35:31"}}</span></code></pre>
+<span class="out"> "masCaliente":{"numero":5,"sensor":"sensor-A","celsius":34.0,"hora":"14:35:31"}}</span></code></pre>
   </div>
 
   <p><code>collectList()</code> espera a que el flujo <strong>termine</strong> y devuelve todo junto: por eso el tipo pasa a ser <code>Mono&lt;…&gt;</code>, un solo valor.</p>
