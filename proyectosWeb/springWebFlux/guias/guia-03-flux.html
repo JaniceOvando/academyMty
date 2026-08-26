@@ -611,9 +611,9 @@ es.onerror = <span class="kw">function</span> () {
   <div class="term">
     <button class="copy" type="button">Copiar</button>
 <pre><code><span class="p">$</span> <span class="cmd">curl -N -s "localhost:8075/api/lecturas/alertas?umbral=30"</span>
-<span class="out">data:{"numero":2,"celsius":30.7,"hora":"14:35:09"}</span>
-<span class="out">data:{"numero":3,"celsius":32.5,"hora":"14:35:10"}</span>
-<span class="out">data:{"numero":4,"celsius":33.6,"hora":"14:35:11"}</span>
+<span class="out">data:{"numero":2,"sensor":"sensor-A","celsius":30.7,"hora":"14:35:09"}</span>
+<span class="out">data:{"numero":3,"sensor":"sensor-A","celsius":32.5,"hora":"14:35:10"}</span>
+<span class="out">data:{"numero":4,"sensor":"sensor-A","celsius":33.6,"hora":"14:35:11"}</span>
 <span class="out">          ⋮  y luego SILENCIO mientras la onda baja</span></code></pre>
   </div>
 
@@ -644,8 +644,8 @@ es.onerror = <span class="kw">function</span> () {
   <div class="term">
     <button class="copy" type="button">Copiar</button>
 <pre><code><span class="p">$</span> <span class="cmd">curl -N -s localhost:8075/api/lecturas/hasta/20</span>
-<span class="out">data:{"numero":12,"celsius":21.3,…}</span>
-<span class="out">data:{"numero":13,"celsius":19.5,…}</span>
+<span class="out">data:{"numero":12,"sensor":"sensor-A","celsius":21.3,…}</span>
+<span class="out">data:{"numero":13,"sensor":"sensor-A","celsius":19.5,…}</span>
 <span class="p">$</span> <span class="cm"># ← el prompt vuelve SOLO, sin Ctrl-C</span></code></pre>
   </div>
 
