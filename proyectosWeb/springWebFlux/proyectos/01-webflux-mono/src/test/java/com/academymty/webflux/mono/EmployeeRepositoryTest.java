@@ -8,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.time.Duration;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -26,10 +25,15 @@ class EmployeeRepositoryTest {
      * Sin esto, un StepVerifier que espera una senal que nunca llega se queda
      * colgado PARA SIEMPRE en vez de fallar, y revienta el build de CI.
      * Lo descubrimos rompiendo el codigo a proposito: la suite se colgo 8 minutos.
+     *
+     * El margen se DERIVA de LATENCIA en vez de ser un 10 fijo. Con los 300 ms
+     * originales, un timeout de 10 s daba 33x de holgura; al subir la latencia a
+     * 5 s ese mismo 10 se quedo en 2x, a un mal dia de CI de volverse intermitente.
+     * Atado a la constante, no puede volver a desfasarse.
      */
     @BeforeAll
     static void noColgarseNunca() {
-        StepVerifier.setDefaultTimeout(Duration.ofSeconds(10));
+        StepVerifier.setDefaultTimeout(EmployeeRepository.LATENCIA.plusSeconds(10));
     }
 
 
@@ -73,7 +77,7 @@ class EmployeeRepositoryTest {
         // expectNoEvent(d) verifica que durante ese tiempo NO llega ninguna senal.
         StepVerifier.withVirtualTime(() -> repo.findById(1))
                 .expectSubscription()
-                .expectNoEvent(EmployeeRepository.LATENCIA)   // 300 ms de silencio
+                .expectNoEvent(EmployeeRepository.LATENCIA)   // 5 segundos de silencio
                 .assertNext(e -> assertEquals("Leslie", e.firstName()))
                 .verifyComplete();
     }

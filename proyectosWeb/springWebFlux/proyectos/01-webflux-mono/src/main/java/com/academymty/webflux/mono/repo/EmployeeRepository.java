@@ -14,14 +14,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * No hay base de datos a proposito. Lo que se aprende aqui es Mono, y cada minuto
  * peleando con Docker es un minuto que no se dedica a eso.
  *
- * El delayElement(300 ms) simula lo unico que nos interesa de una base de datos real:
+ * El delayElement(5 s) simula lo unico que nos interesa de una base de datos real:
  * QUE TARDA. Sin esa espera, todo este tema no tendria sentido.
  */
 @Repository
 public class EmployeeRepository {
 
     /** Lo que tarda "la base de datos" en contestar. */
-    public static final Duration LATENCIA = Duration.ofMillis(5000); //5 Segundos
+    public static final Duration LATENCIA = Duration.ofMillis(5000);   // 5 segundos
 
     private final Map<Integer, Employee> tabla = new ConcurrentHashMap<>(Map.of(
             1, new Employee(1, "Leslie",  "Andrews", "leslie@luv2code.com"),

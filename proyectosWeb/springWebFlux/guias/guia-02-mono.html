@@ -565,7 +565,7 @@ logging.pattern.console=%clr(%d{HH:mm:ss.SSS}){faint} %clr(%-5level) %clr([%15.1
   <div class="term">
     <button class="copy" type="button">Copiar</button>
     <span class="lbl">repo/EmployeeRepository.java — el corazón del proyecto</span>
-<pre><code><span class="kw">public static final</span> <span class="ty">Duration</span> LATENCIA = <span class="ty">Duration</span>.ofMillis(<span class="st">300</span>);
+<pre><code><span class="kw">public static final</span> <span class="ty">Duration</span> LATENCIA = <span class="ty">Duration</span>.ofMillis(<span class="st">5000</span>);
 
 <span class="cm">// ── versión reactiva ──────────────────────────────────────</span>
 <span class="kw">public</span> <span class="ty">Mono</span>&lt;<span class="ty">Employee</span>&gt; findById(<span class="kw">int</span> id) {
@@ -580,7 +580,7 @@ logging.pattern.console=%clr(%d{HH:mm:ss.SSS}){faint} %clr(%-5level) %clr([%15.1
 }</code></pre>
   </div>
 
-  <p class="note key"><strong>Las dos tardan 300 ms. Esa es la clave del experimento final.</strong> No vamos a comparar una lenta con una rápida: vamos a comparar dos que tardan <em>exactamente lo mismo</em>. Lo único que cambia es si el hilo se queda esperando o se va a atender a otro. Guarda esa frase para la §08.</p>
+  <p class="note key"><strong>Las dos tardan 5 segundos. Esa es la clave del experimento final.</strong> No vamos a comparar una lenta con una rápida: vamos a comparar dos que tardan <em>exactamente lo mismo</em>. Lo único que cambia es si el hilo se queda esperando o se va a atender a otro. Guarda esa frase para la §08.</p>
 
   <p>Y fíjate en lo que <strong>no</strong> pasa al llamar a <code>findById()</code>: no se busca nada, no se espera nada. Devuelve un <code>Mono</code> y el método termina de inmediato. Es <em>la receta</em>.</p>
 </section>
@@ -597,7 +597,7 @@ logging.pattern.console=%clr(%d{HH:mm:ss.SSS}){faint} %clr(%-5level) %clr([%15.1
 <pre><code><span class="cm">// ── Proyecto 15 · Spring MVC ──────────────────────────────</span>
 <span class="kw">@GetMapping</span>(<span class="st">"/employees/{id}"</span>)
 <span class="kw">public</span> <span class="ty">Employee</span> findById(<span class="kw">@PathVariable</span> <span class="kw">int</span> id) {
-    <span class="kw">return</span> service.findById(id);        <span class="cm">// el hilo espera AQUÍ 300 ms</span>
+    <span class="kw">return</span> service.findById(id);        <span class="cm">// el hilo espera AQUÍ 5 segundos</span>
 }
 
 <span class="cm">// ── Proyecto 01 · WebFlux ─────────────────────────────────</span>
@@ -617,12 +617,12 @@ logging.pattern.console=%clr(%d{HH:mm:ss.SSS}){faint} %clr(%-5level) %clr([%15.1
     <button class="copy" type="button">Copiar</button>
 <pre><code><span class="p">$</span> <span class="cmd">curl -s -w '\n%{time_total}s\n' http://localhost:8074/api/employees/1</span>
 <span class="out">{"id":1,"firstName":"Leslie","lastName":"Andrews","email":"leslie@luv2code.com"}</span>
-<span class="out ok">0.327342s</span></code></pre>
+<span class="out ok">5.017419s</span></code></pre>
   </div>
 
   <div class="ver">
     <b>Qué deberías ver</b>
-    <p>El JSON de siempre, y unos <strong>0,3 segundos</strong> — la latencia que simulamos. Idéntico a lo que devolvía el proyecto 15. <em>Y eso es exactamente el problema pedagógico de esta guía:</em> con una sola petición, WebFlux y MVC son indistinguibles. La diferencia no aparece hasta la §08.</p>
+    <p>El JSON de siempre, y unos <strong>5 segundos</strong> — la latencia que simulamos. Idéntico a lo que devolvía el proyecto 15. <em>Y eso es exactamente el problema pedagógico de esta guía:</em> con una sola petición, WebFlux y MVC son indistinguibles. La diferencia no aparece hasta la §08.</p>
   </div>
 </section>
 
@@ -649,7 +649,8 @@ logging.pattern.console=%clr(%d{HH:mm:ss.SSS}){faint} %clr(%-5level) %clr([%15.1
 <span class="cm"># …y ahora el que SÍ lleva switchIfEmpty:</span>
 <span class="p">$</span> <span class="cmd">curl -i http://localhost:8074/api/employees/999</span>
 <span class="out ok">HTTP/1.1 404 Not Found</span>
-<span class="out">{"status":404,"error":"Not Found","path":"/api/employees/999"}</span></code></pre>
+<span class="out">{"timestamp":"…","path":"/api/employees/999","status":404,</span>
+<span class="out"> "error":"Not Found","requestId":"…","message":"No existe el empleado 999"}</span></code></pre>
   </div>
 
   <p class="note warn"><strong><code>200 OK</code> con el cuerpo vacío.</strong> No <code>404</code>. Y no es un fallo de Spring: es coherente con lo que aprendiste en la guía de conceptos. Un <code>Mono</code> vacío es un flujo que hizo <code>onComplete</code> <strong>sin ningún <code>onNext</code></strong>, y eso es un <em>final feliz</em>. En el modelo reactivo, <strong>“no hay nada” no es un error</strong> — es una respuesta legítima.</p>
@@ -793,7 +794,7 @@ logging.pattern.console=%clr(%d{HH:mm:ss.SSS}){faint} %clr(%-5level) %clr([%15.1
 <span class="kw">void</span> tardaLoQueDebeTardar() {
     <span class="ty">StepVerifier</span>.withVirtualTime(() -> repo.findById(<span class="st">1</span>))
             .expectSubscription()
-            .expectNoEvent(<span class="ty">EmployeeRepository</span>.LATENCIA)   <span class="cm">// 300 ms de SILENCIO</span>
+            .expectNoEvent(<span class="ty">EmployeeRepository</span>.LATENCIA)   <span class="cm">// 5 segundos de SILENCIO</span>
             .assertNext(e -> assertEquals(<span class="st">"Leslie"</span>, e.firstName()))
             .verifyComplete();
 }</code></pre>
@@ -801,13 +802,13 @@ logging.pattern.console=%clr(%d{HH:mm:ss.SSS}){faint} %clr(%-5level) %clr([%15.1
 
   <p><code>expectNoEvent(d)</code> comprueba que durante ese tiempo <strong>no llega ninguna señal</strong>. Es la forma de testear que algo tarda, sin esperar de verdad.</p>
 
-  <p class="note warn"><strong>Y un detalle que evita perder una tarde.</strong> Un <code>StepVerifier</code> que espera una señal que nunca llega se queda colgado <strong>para siempre</strong>, no falla. En este proyecto lo comprobamos rompiendo la cadencia a propósito: la suite se colgó ocho minutos hasta que la matamos. Con una línea deja de pasar — y los mismos tests fallan en 10 segundos en vez de colgarse:</p>
+  <p class="note warn"><strong>Y un detalle que evita perder una tarde.</strong> Un <code>StepVerifier</code> que espera una señal que nunca llega se queda colgado <strong>para siempre</strong>, no falla. En este proyecto lo comprobamos rompiendo la cadencia a propósito: la suite se colgó ocho minutos hasta que la matamos. Con una línea deja de pasar — y los mismos tests fallan en 15 segundos en vez de colgarse:</p>
 
   <div class="term">
     <button class="copy" type="button">Copiar</button>
 <pre><code><span class="kw">@BeforeAll</span>
 <span class="kw">static void</span> noColgarseNunca() {
-    <span class="ty">StepVerifier</span>.setDefaultTimeout(<span class="ty">Duration</span>.ofSeconds(<span class="st">10</span>));
+    <span class="ty">StepVerifier</span>.setDefaultTimeout(<span class="ty">EmployeeRepository</span>.LATENCIA.plusSeconds(<span class="st">10</span>));
 }</code></pre>
   </div>
 
@@ -836,7 +837,7 @@ logging.pattern.console=%clr(%d{HH:mm:ss.SSS}){faint} %clr(%-5level) %clr([%15.1
 }</code></pre>
   </div>
 
-  <p>Compila. Arranca. Devuelve el mismo JSON. Y tarda los mismos 300 ms si haces <strong>una</strong> petición. Ahora hazle 100 a la vez:</p>
+  <p>Compila. Arranca. Devuelve el mismo JSON. Y tarda los mismos 5 segundos si haces <strong>una</strong> petición. Ahora hazle 100 a la vez:</p>
 
   <div class="term">
     <button class="copy" type="button">Copiar</button>
@@ -846,22 +847,22 @@ logging.pattern.console=%clr(%d{HH:mm:ss.SSS}){faint} %clr(%-5level) %clr([%15.1
 <span class="out">  ~10 hilos. Lanzamos 100 peticiones CONCURRENTES a cada ruta.</span>
 
 <span class="out">  Prediccion antes de correrlo:</span>
-<span class="out">    reactivo    -> ~0.3s   (ningun hilo espera: las 100 se solapan)</span>
-<span class="out">    bloqueante  -> ~3.00s  (100 peticiones / 10 hilos = 10.0 tandas de 0.3s)</span>
+<span class="out">    reactivo    -> ~5.0s   (ningun hilo espera: las 100 se solapan)</span>
+<span class="out">    bloqueante  -> ~50.00s   (100 peticiones / 10 hilos = 10.0 tandas de 5.0s)</span>
 
-<span class="out ok">  reactivo     100 peticiones en   0.45 s</span>
-<span class="out bad">  bloqueante   100 peticiones en   3.40 s</span></code></pre>
+<span class="out ok">  reactivo     100 peticiones en   5.13 s</span>
+<span class="out bad">  bloqueante   100 peticiones en  50.13 s</span></code></pre>
   </div>
 
   <div class="ver">
     <b>Qué deberías ver</b>
-    <p>El reactivo tarda <strong>lo mismo que una sola petición</strong> — porque las 100 se solapan. El bloqueante tarda unas <strong>10 veces más</strong>, y el número no es magia: es <code>100 peticiones ÷ 10 hilos × 0,3 s</code>. Si tu máquina tiene 4 núcleos te saldrá peor; si tiene 16, mejor. <strong>Predice tu número antes de correrlo</strong> y comprueba que cuadra.</p>
+    <p>El reactivo tarda <strong>lo mismo que una sola petición</strong> — porque las 100 se solapan. El bloqueante tarda unas <strong>10 veces más</strong>, y el número no es magia: es <code>100 peticiones ÷ 10 hilos × 5 s</code>. Si tu máquina tiene 4 núcleos te saldrá peor; si tiene 16, mejor. <strong>Predice tu número antes de correrlo</strong> y comprueba que cuadra.</p>
   </div>
 
   <h3>Qué demuestra exactamente (y qué no)</h3>
 
   <ul class="plain">
-    <li><strong>No demuestra que “reactivo sea rápido”.</strong> Las dos rutas tardan 300 ms en el dato, y una sola petición tarda igual en las dos. Reactivo no acelera nada.</li>
+    <li><strong>No demuestra que “reactivo sea rápido”.</strong> Las dos rutas tardan 5 segundos en el dato, y una sola petición tarda igual en las dos. Reactivo no acelera nada.</li>
     <li><strong>Demuestra que el bloqueante desperdicia.</strong> Duerme sus 10 hilos y por eso las peticiones hacen cola. El reactivo los suelta y no encola. La métrica que mejora es el <strong>throughput</strong>, no la latencia — justo lo que el anexo de erratas señala como impreciso en el mapa mental.</li>
     <li><strong>Y demuestra la trampa del §07 de la guía de conceptos.</strong> Ese controlador bloqueante no es un ejemplo rebuscado: es lo que pasa si migras a WebFlux y dejas el repositorio con JPA/JDBC. Habrás cambiado los 200 hilos de Tomcat por 10 de Netty, y los bloqueas igual. <strong>Quedas peor que antes de migrar.</strong></li>
   </ul>
@@ -907,7 +908,7 @@ logging.pattern.console=%clr(%d{HH:mm:ss.SSS}){faint} %clr(%-5level) %clr([%15.1
 
   <ul class="check">
     <li><span class="box">1</span><span><b>Predice antes de medir</b> Mira cuántos núcleos tiene tu máquina y calcula qué va a tardar <code>./scripts/comparar.sh 200</code> en la ruta bloqueante. Después córrelo. ¿Cuadró?</span></li>
-    <li><span class="box">2</span><span><b>Rompe el reactivo</b> Mete un <code>Thread.sleep(300)</code> <em>dentro</em> del <code>map()</code> del controlador reactivo — sin tocar el tipo de retorno, que sigue siendo <code>Mono</code>. Vuelve a medir. ¿Sigue siendo reactivo? Esta es la trampa más cara del tema.</span></li>
+    <li><span class="box">2</span><span><b>Rompe el reactivo</b> Mete un <code>Thread.sleep(5000)</code> <em>dentro</em> del <code>map()</code> del controlador reactivo — sin tocar el tipo de retorno, que sigue siendo <code>Mono</code>. Vuelve a medir. ¿Sigue siendo reactivo? Esta es la trampa más cara del tema.</span></li>
     <li><span class="box">3</span><span><b>Arréglalo</b> Ahora aísla ese bloqueo con <code>.subscribeOn(Schedulers.boundedElastic())</code> y mide otra vez. ¿Qué cambió y por qué?</span></li>
     <li><span class="box">4</span><span><b>404 sin excepción</b> Consigue que <code>/api/employees-suave/999</code> devuelva <code>404</code> sin lanzar ninguna excepción. Pista: <code>defaultIfEmpty</code> no sirve; mira <code>ResponseEntity</code>.</span></li>
     <li><span class="box">5</span><span><b>Reintentos</b> Haz que el endpoint <code>/boom</code> reintente tres veces con espera creciente antes de rendirse, usando <code>retryWhen(Retry.backoff(3, Duration.ofMillis(200)))</code>. Añade un <code>doOnError</code> para ver los intentos en el log.</span></li>
