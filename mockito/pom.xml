@@ -74,30 +74,63 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>${surefire.version}</version>
-				<configuration>
-					<!-- Carga el agente de Mockito por adelantado. Sin esta linea,
-					     cada corrida en Java 21 escupe:
-					       Mockito is currently self-attaching to enable the
-					       inline-mock-maker...
-					       WARNING: A Java agent has been loaded dynamically
-
-					     OJO CON COMO SE ESCRIBE LA RUTA. Lo natural aqui seria
-					     ${org.mockito:mockito-core:jar}, la propiedad que publica
-					     el maven-dependency-plugin. NO LA USES: esa propiedad solo
-					     existe DURANTE el build de Maven. Eclipse lee este argLine
-					     al hacer Run As > JUnit Test, pero no ejecuta el plugin que
-					     la define, asi que le pasa al JVM el texto crudo y revienta:
-
-					       Error opening zip file or JAR manifest missing
-					       Error occurred during initialization of VM
-					       agent library failed Agent_OnLoad: instrument
-
-					     settings.localRepository y mockito.version salen del modelo
-					     del POM, y esas Eclipse si las resuelve. Funciona en los dos
-					     sitios y en cualquier maquina. -->
-					<argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar -Xshare:off</argLine>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>
+
+	<!-- ====================================================================== -->
+	<!--  EL AGENTE DE MOCKITO VIVE EN UN PERFIL, Y NO EN <build>, A PROPOSITO. -->
+	<!--                                                                        -->
+	<!--  Sin el, cada corrida en Java 21 avisa de que Mockito se engancha en   -->
+	<!--  caliente ("self-attaching", "A Java agent has been loaded             -->
+	<!--  dynamically") y ademas los tests tardan mas.                          -->
+	<!--                                                                        -->
+	<!--  Pero este argLine NO PUEDE ESTAR EN <build>. Eclipse (m2e) lo lee al  -->
+	<!--  hacer Run As > JUnit Test y lo copia a la configuracion de            -->
+	<!--  lanzamiento SIN RESOLVER NINGUNA PROPIEDAD. Comprobado con las dos:   -->
+	<!--                                                                        -->
+	<!--    ${org.mockito:mockito-core:jar}  -> la copia literal                -->
+	<!--    ${settings.localRepository}      -> la deja VACIA                   -->
+	<!--                                                                        -->
+	<!--  y en los dos casos el JVM ni arranca:                                 -->
+	<!--                                                                        -->
+	<!--    Error opening zip file or JAR manifest missing                      -->
+	<!--    Error occurred during initialization of VM                          -->
+	<!--    agent library failed Agent_OnLoad: instrument                       -->
+	<!--                                                                        -->
+	<!--  m2e define la propiedad m2e.version cuando construye. Con             -->
+	<!--  !m2e.version este perfil se activa en la terminal y NO dentro de      -->
+	<!--  Eclipse: Maven se lleva el agente, Eclipse no ve nada que pueda       -->
+	<!--  romper, y las dos vias corren los mismos 12 tests.                    -->
+	<!-- ====================================================================== -->
+	<profiles>
+		<profile>
+			<id>agente-mockito</id>
+			<activation>
+				<property><name>!m2e.version</name></property>
+			</activation>
+			<build>
+				<plugins>
+					<!-- Publica ${org.mockito:mockito-core:jar}. Aqui si se
+					     resuelve, porque esto solo corre bajo Maven. -->
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-dependency-plugin</artifactId>
+						<version>3.8.1</version>
+						<executions>
+							<execution><goals><goal>properties</goal></goals></execution>
+						</executions>
+					</plugin>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<version>${surefire.version}</version>
+						<configuration>
+							<argLine>-javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>
