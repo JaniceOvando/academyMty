@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.curso</groupId>
+	<artifactId>mockito</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>mockito</name>
+	<description>Probar un servicio cuando del colaborador solo conocemos la interfaz</description>
+
+	<properties>
+		<maven.compiler.release>21</maven.compiler.release>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<junit.version>6.1.3</junit.version>
+		<mockito.version>5.23.0</mockito.version>
+		<surefire.version>3.5.6</surefire.version>
+		<dependency-plugin.version>3.8.1</dependency-plugin.version>
+	</properties>
+
+	<dependencyManagement>
+		<dependencies>
+			<!-- El junit-bom va PRIMERO y por eso gana: mockito-junit-jupiter
+			     5.23.0 arrastra junit-jupiter-api 5.13.4, pero este BOM fija
+			     6.1.3 en todo el arbol. Compruebalo:
+			         ./mvnw dependency:tree "-Dincludes=org.junit*:*"          -->
+			<dependency>
+				<groupId>org.junit</groupId>
+				<artifactId>junit-bom</artifactId>
+				<version>${junit.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-bom</artifactId>
+				<version>${mockito.version}</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.junit.jupiter</groupId>
+			<artifactId>junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- mock(), when(), verify(), ArgumentCaptor... -->
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- Solo aporta MockitoExtension, para @ExtendWith, @Mock e @InjectMocks.
+		     Sin esto, @Mock no se rellena y salen NullPointerException. -->
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<!-- OJO AL SCOPE: las tres dependencias son <scope>test</scope>.
+	     Mockito NO viaja al artefacto de produccion, y por eso Principal.java
+	     (que vive en src/main/java) no puede usar mock(). Ver su comentario. -->
+
+	<build>
+		<plugins>
+			<!-- Publica la ruta del jar de cada dependencia como propiedad,
+			     para poder escribir ${org.mockito:mockito-core:jar} abajo. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<version>${dependency-plugin.version}</version>
+				<executions>
+					<execution><goals><goal>properties</goal></goals></execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>${surefire.version}</version>
+				<configuration>
+					<!-- Carga el agente de Mockito por adelantado. Sin esta linea,
+					     cada corrida en Java 21 escupe:
+					       Mockito is currently self-attaching to enable the
+					       inline-mock-maker...
+					       WARNING: A Java agent has been loaded dynamically
+					     y ademas los tests van mas lentos. -->
+					<argLine>-javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+</project>
