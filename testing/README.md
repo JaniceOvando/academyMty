@@ -59,6 +59,34 @@ Cada uno demuestra algo que no se puede enseñar solo con texto:
 
 ---
 
+## La auditoría de coherencia
+
+```bash
+./scripts/auditar.py            # comprobaciones estáticas, en un segundo
+./scripts/auditar.py --tests    # además corre las suites y compara cifras
+```
+
+Existe porque el mismo dato —la latencia del proyecto Mono— se desincronizó **dos veces
+el mismo día** entre el código, un script y una guía. La lección no fue «hay que fijarse
+más»: fue que un número repetido a mano en cuatro sitios se desincroniza solo.
+
+Comprueba nueve cosas: el HTML cierra bien, las anclas del índice existen, las guías se
+enlazan entre sí por su URL publicada (sin relativos, sin autoenlaces, y con el texto del
+enlace nombrando de verdad su destino), la numeración de secciones es correlativa, los
+archivos que las guías citan existen, las versiones que muestran en un `<version>` son de
+verdad las de los `pom.xml`, las cifras de la cabecera cuadran con lo que reporta Surefire,
+y los `.sh` y `mvnw` son ejecutables. Devuelve `1` si algo falla.
+
+Está probado **en negativo**: se le rompieron doce cosas a propósito —una guía sin
+registrar, un ancla huérfana, una etiqueta sin cerrar, una cifra mentida, una versión
+inventada, un `.sh` sin permisos…— y cazó las doce. Un verificador que nunca has visto
+fallar no sabes si funciona.
+
+**Y dice en voz alta lo que NO mira**, que es la mitad de su valor: no comprueba que las
+páginas rendericen, ni que el botón *Copiar* funcione, ni que los comandos corran, ni si
+la prosa dice la verdad. Un verde suyo significa «todo lo que miro está bien», no «todo
+está bien».
+
 ## Cómo abrirlo en Eclipse
 
 **File → Import… → Maven → Existing Maven Projects**, y selecciona la carpeta `testing`.
