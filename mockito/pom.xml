@@ -16,7 +16,6 @@
 		<junit.version>6.1.3</junit.version>
 		<mockito.version>5.23.0</mockito.version>
 		<surefire.version>3.5.6</surefire.version>
-		<dependency-plugin.version>3.8.1</dependency-plugin.version>
 	</properties>
 
 	<dependencyManagement>
@@ -71,17 +70,6 @@
 
 	<build>
 		<plugins>
-			<!-- Publica la ruta del jar de cada dependencia como propiedad,
-			     para poder escribir ${org.mockito:mockito-core:jar} abajo. -->
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-dependency-plugin</artifactId>
-				<version>${dependency-plugin.version}</version>
-				<executions>
-					<execution><goals><goal>properties</goal></goals></execution>
-				</executions>
-			</plugin>
-
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
@@ -92,8 +80,22 @@
 					       Mockito is currently self-attaching to enable the
 					       inline-mock-maker...
 					       WARNING: A Java agent has been loaded dynamically
-					     y ademas los tests van mas lentos. -->
-					<argLine>-javaagent:${org.mockito:mockito-core:jar} -Xshare:off</argLine>
+
+					     OJO CON COMO SE ESCRIBE LA RUTA. Lo natural aqui seria
+					     ${org.mockito:mockito-core:jar}, la propiedad que publica
+					     el maven-dependency-plugin. NO LA USES: esa propiedad solo
+					     existe DURANTE el build de Maven. Eclipse lee este argLine
+					     al hacer Run As > JUnit Test, pero no ejecuta el plugin que
+					     la define, asi que le pasa al JVM el texto crudo y revienta:
+
+					       Error opening zip file or JAR manifest missing
+					       Error occurred during initialization of VM
+					       agent library failed Agent_OnLoad: instrument
+
+					     settings.localRepository y mockito.version salen del modelo
+					     del POM, y esas Eclipse si las resuelve. Funciona en los dos
+					     sitios y en cualquier maquina. -->
+					<argLine>-javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar -Xshare:off</argLine>
 				</configuration>
 			</plugin>
 		</plugins>
