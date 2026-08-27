@@ -4,8 +4,8 @@ Material de la Academia Monterrey para el tema de pruebas unitarias. Sigue el te
 [la guía de JUnit 5 de Baeldung](https://www.baeldung.com/junit-5), con el código actualizado
 a **JUnit 6.1.3** y verificado ejecutándolo.
 
-Cinco guías y cuatro proyectos Maven independientes. Cada proyecto tiene al menos un script
-que demuestra, corriéndolo, la idea central de su guía.
+Cinco guías, un anexo y cuatro proyectos Maven independientes — **315 tests** en total.
+Cada proyecto tiene al menos un script que demuestra, corriéndolo, la idea central de su guía.
 
 ---
 
