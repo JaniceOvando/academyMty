@@ -41,7 +41,7 @@ cd proyectos/01-junit-fundamentos
 
 En Windows: `mvnw.cmd test`. Los `.sh` necesitan **Git Bash** o **WSL**.
 
-### Los tres scripts
+### Los cinco scripts
 
 Cada uno demuestra algo que no se puede enseñar solo con texto:
 
@@ -54,9 +54,39 @@ Cada uno demuestra algo que no se puede enseñar solo con texto:
 - **`contar.sh`** — cuenta los métodos escritos a mano contra los tests ejecutados: 32 → 211.
 - **`por-que-mockear.sh`** — la misma prueba contra el repositorio real (300 ms por consulta) y
   con dobles. **5 tests reales tardan más que los 40 con mocks.** Justifica Mockito midiéndolo.
-- **`la-mentira.sh`** — el más importante de los cuatro. Rompe la regla del cupo dentro de `Curso`
+- **`la-mentira.sh`** — el más importante de los cinco. Rompe la regla del cupo dentro de `Curso`
   y corre dos clases que prueban lo mismo: la que usa un `Curso` real **cae**, la que lo mockea
   **sigue en verde**. Las dos «cubren» el mismo código; solo una lo protege.
+
+## Los proyectos de clase, fuera de esta carpeta
+
+En la raíz del repositorio hay otros cuatro proyectos sobre lo mismo. **No son parte de este
+temario**: son el código que se escribió en vivo durante la sesión, en paquete `com.curso.v0`,
+con sus atajos y sus huecos. Se conservan para que el alumno reencuentre lo que vio en pantalla.
+
+| Proyecto | Tests | De qué va | Guía |
+|---|---|---|---|
+| [`demoTestJunit`](../demoTestJunit) | 9 | Aserciones sueltas: `assertAll`, `assertThrows`, el `assertTrue` con mensaje diferido. | `01` |
+| [`demoTestJunit2`](../demoTestJunit2) | 7 (desde 5 métodos) | `Calculator` con `@BeforeEach` y `@RepeatedTest(3)`. | `01`, `03` |
+| [`mockitoWithout`](../mockitoWithout) | — | `ServiceCalculoImpuesto` contra la implementación **real** de `ICalculoComplejo`. Sin tests: solo un `main`. | `04` |
+| [`mockito`](../mockito) | 12 | El mismo servicio cuando esa implementación **no existe**. | `04` |
+
+**`mockitoWithout` y `mockito` son el mismo código**, y funcionan como apertura de la guía 04.
+Ejecuta el `main` de los dos: el primero imprime `3.4236650365470685E7`; el segundo revienta con
+`NullPointerException`, porque ahí solo tenemos la interfaz —la implementación la escribe un
+tercero y en producción la inyecta el framework—. Ese contraste plantea en treinta segundos la
+pregunta que Mockito responde, y aun así `./mvnw test` da 12 en verde: el servicio sí se puede
+probar entero.
+
+Los dos alcances se complementan, y conviene no confundirlos. `mockito` enseña **por qué** existe
+Mockito, con un caso donde mockear es obligatorio porque no hay otra cosa que usar.
+[`04-mockito-dobles`](proyectos/04-mockito-dobles) enseña además **cuándo NO** hacerlo
+—`SobreMockeoTest`, `la-mentira.sh`—, que es la mitad que se olvida. Para dar el tema completo:
+el par de clase primero, este proyecto después.
+
+Una diferencia práctica: a diferencia de los de esta carpeta, esos cuatro **sí llevan `.project`
+y `.classpath` versionados**, así que se importan con *Existing Projects into Workspace*. Dos de
+ellos, `demoTestJunit2` y `mockito`, son además proyectos Maven.
 
 ---
 
@@ -91,7 +121,7 @@ está bien».
 ## Cómo abrirlo en Eclipse
 
 **File → Import… → Maven → Existing Maven Projects**, y selecciona la carpeta `testing`.
-Los tres proyectos aparecen a la vez. No uses *Existing Projects into Workspace*: no llevan
+Los cuatro proyectos aparecen a la vez. No uses *Existing Projects into Workspace*: no llevan
 `.project` — los genera m2e al importar.
 
 Para correr un test suelto: clic derecho sobre la clase → **Run As → JUnit Test**.
