@@ -13,15 +13,16 @@ Cada proyecto tiene al menos un script que demuestra, corriéndolo, la idea cent
 
 | | Guía | De qué va |
 |---|---|---|
-| `00` | [Por qué se prueba](https://claude.ai/code/artifact/dc6ceb37-bac9-4a8c-bbd0-89f91dbc7def) | Conceptos, **sin código**. Qué es un test, qué no es, y por qué verde no significa probado. Requisito de la 01. |
-| `01` | [Anatomía de un test](https://claude.ai/code/artifact/6755acb6-a6c0-42ac-95dd-e2ffb84a3a71) | `@Test`, ciclo de vida, aserciones, la trampa del `double` — y el test que atrapa un bug de un carácter. |
-| `02` | [El catálogo](https://claude.ai/code/artifact/b02ccd10-cb0b-4545-a130-a0dc29e6a26c) | `assertThrows`, timeouts, *assumptions*, `@Nested`, `@Tag`, inyección de parámetros, `@Suite`. |
-| `03` | [Un test, muchos datos](https://claude.ai/code/artifact/dec3fbf5-39f0-411c-8daa-02bb3dec3eb0) | `@ParameterizedTest` con todas sus fuentes, `@RepeatedTest`, `@TestFactory`. |
-| `04` | [Dobles de prueba](https://claude.ai/code/artifact/33074df8-6377-44cd-a3c6-68f766ff4b78) | **Mockito**: `@Mock`, `when`/`verify`, `@InjectMocks`, `ArgumentCaptor`, espías, estrictez — y cuándo NO mockear. |
-| `··` | [JUnit 5 contra JUnit 6](https://claude.ai/code/artifact/53f58e3c-f8ea-4c4c-a6a9-ae93e2b9ca9a) | Fe de erratas: qué versión usas de verdad, y la tabla de migración desde JUnit 4. |
+| `00` | [Por qué se prueba](guias/guia-00-por-que-se-prueba.html) | Conceptos, **sin código**. Qué es un test, qué no es, y por qué verde no significa probado. Requisito de la 01. |
+| `01` | [Anatomía de un test](guias/guia-01-anatomia-de-un-test.html) | `@Test`, ciclo de vida, aserciones, la trampa del `double` — y el test que atrapa un bug de un carácter. |
+| `02` | [El catálogo](guias/guia-02-el-catalogo.html) | `assertThrows`, timeouts, *assumptions*, `@Nested`, `@Tag`, inyección de parámetros, `@Suite`. |
+| `03` | [Un test, muchos datos](guias/guia-03-un-test-muchos-datos.html) | `@ParameterizedTest` con todas sus fuentes, `@RepeatedTest`, `@TestFactory`. |
+| `04` | [Dobles de prueba](guias/guia-04-dobles-de-prueba.html) | **Mockito**: `@Mock`, `when`/`verify`, `@InjectMocks`, `ArgumentCaptor`, espías, estrictez — y cuándo NO mockear. |
+| `··` | [JUnit 5 contra JUnit 6](guias/anexo-junit5-vs-junit6.html) | Fe de erratas: qué versión usas de verdad, y la tabla de migración desde JUnit 4. |
 
-Los enlaces de arriba son las guías publicadas. Los archivos fuente están en `guias/`: son
-HTML autocontenidos y también se abren con doble clic, sin servidor.
+Son archivos HTML autocontenidos: se abren con **doble clic**, sin servidor y sin internet,
+y navegan entre sí. (También están publicadas en la web; las páginas detectan solas dónde
+se están viendo y ajustan sus enlaces.)
 
 ## Los proyectos
 

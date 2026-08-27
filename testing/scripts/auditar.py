@@ -175,26 +175,46 @@ def enlaces(guias):
         s = leer(f)
         problemas = []
 
-        rel = re.findall(r'href="((?:guia|anexo)-[^"]+\.html)"', s)
-        if rel:
-            problemas.append(f"relativos sin convertir {sorted(set(rel))} "
-                             f"(rompen al publicarse como artifact)")
+        # OJO AL SENTIDO DE ESTA COMPROBACION.
+        #
+        # Durante un tiempo fue justo al reves: se exigian URL de artifact y se
+        # daban por rotos los relativos. Estaba mal, y de la peor manera: el
+        # canal que de verdad usan los alumnos es el archivo HTML abierto con
+        # doble clic, y ahi una URL de artifact los saca del material en el
+        # primer clic -- a una pagina privada que ademas no pueden ver.
+        #
+        # Ahora: en el HTML van RELATIVOS, y un bloque de JS los reescribe a su
+        # URL solo cuando la pagina corre publicada. Funciona en los dos sitios.
+        citados = set(re.findall(r'href="((?:guia|anexo)-[^"]+\.html)"', s))
 
-        citados = set(re.findall(r"/artifact/([0-9a-f-]{36})", s))
-        raros = citados - set(uuid_de.values())
-        if raros:
-            problemas.append(f"uuid desconocido {sorted(raros)}")
-        if uuid_de[f] in citados:
-            problemas.append("se enlaza a si misma por URL")
-        faltan = {g for g in guias if g != f} - {g for g in guias if uuid_de[g] in citados}
+        fantasmas = sorted(d for d in citados if not os.path.exists(os.path.join(GUIAS, d)))
+        if fantasmas:
+            problemas.append(f"enlaza a archivos que no existen {fantasmas}")
+
+        en_href = re.findall(r'href="https://claude\.ai/code/artifact/', s)
+        if en_href:
+            problemas.append(f"{len(en_href)} enlace(s) con URL de artifact en el href "
+                             f"(rompen al abrir el HTML local: deben ser relativos)")
+
+        if f in citados:
+            problemas.append("se enlaza a si misma")
+        faltan = {g for g in guias if g != f} - citados
         if faltan:
             problemas.append(f"no enlaza a {sorted(faltan)}")
 
+        # el remapeo para cuando se publica tiene que estar, y cubrir a todas
+        if "PUBLICADAS" not in s:
+            problemas.append("le falta el bloque JS que reescribe los enlaces al publicarse")
+        else:
+            mapeadas = set(re.findall(r"'((?:guia|anexo)-[^']+\.html)':", s))
+            sin_mapear = sorted(set(guias) - mapeadas)
+            if sin_mapear:
+                problemas.append(f"el remapeo no cubre {sin_mapear}")
+
         # el TEXTO del enlace debe corresponder con su destino
-        for uu, texto in re.findall(
-                r'href="https://claude\.ai/code/artifact/([0-9a-f-]{36})"[^>]*>(.*?)</a>', s, re.S):
-            destino = next((g for g in uuid_de if uuid_de[g] == uu), None)
-            if destino is None:
+        for destino, texto in re.findall(
+                r'href="((?:guia|anexo)-[^"]+\.html)"[^>]*>(.*?)</a>', s, re.S):
+            if destino not in GUIAS_CONOCIDAS:
                 continue
             plano = re.sub(r"<[^>]+>", "", texto).strip().lower()
             # Un enlace puede referirse a su destino de dos formas legitimas:
@@ -217,7 +237,7 @@ def enlaces(guias):
             for p in problemas:
                 mal(f"{f}: {p}")
         else:
-            ok(f"{f}: {len(citados)} enlaces, todos correctos")
+            ok(f"{f}: {len(citados)} enlaces relativos + remapeo al publicar")
 
 
 def numeracion(guias):
