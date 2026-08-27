@@ -77,6 +77,44 @@ Ese es el resumen en una frase: **Java siempre pasa por valor.** Lo que se copia
 nunca el objeto — y por eso puedes *modificar* lo que hay al otro lado, pero no puedes *cambiar a
 dónde apunta* la variable del que te llamó.
 
+## Pruebas unitarias — `demoTestJunit`, `demoTestJunit2`, `mockitoWithout`, `mockito`
+
+Cuatro proyectos en ese orden: primero cómo se escribe un test, después por qué a veces no se
+puede escribir sin ayuda.
+
+| Proyecto | Qué trae | Cómo se corre |
+|---|---|---|
+| `demoTestJunit` | 9 tests de JUnit 5 sueltos: `assertEquals`, `assertAll`, `assertThrows` y el `assertTrue` con mensaje diferido. | Solo Eclipse (`Run As → JUnit Test`). No tiene build fuera del IDE. |
+| `demoTestJunit2` | `Calculator` probado con `@BeforeEach` y `@RepeatedTest(3)`: 5 métodos escritos → **7 tests ejecutados**. | Eclipse o `mvn test`. |
+| `mockitoWithout` | `ServiceCalculoImpuesto` delegando en la implementación **real** de `ICalculoComplejo`. Sin tests: solo un `main` que imprime. | `Run As → Java Application`. |
+| `mockito` | El mismo servicio cuando esa implementación **no existe**. 12 tests en 5 clases. | Eclipse o `./mvnw test`. |
+
+**`mockitoWithout` y `mockito` son el mismo código y hay que verlos juntos**, en ese orden.
+Ejecuta el `main` de los dos:
+
+| | Resultado |
+|---|---|
+| `mockitoWithout` | imprime `3.4236650365470685E7` — la implementación existe. |
+| `mockito` | `NullPointerException` — solo tenemos la interfaz. |
+
+En el segundo, la implementación la escribe un tercero y en producción la inyecta el framework
+(el `//@Autowired` que está en el código). Sin nadie que rellene ese hueco, el servicio no
+arranca. Ese contraste es la pregunta que Mockito responde — y aun así `./mvnw test` da 12 en
+verde, porque el servicio sí se puede probar entero.
+
+Las cinco clases de `mockito/src/test/java` toman una idea cada una:
+
+| Clase | Idea |
+|---|---|
+| `SinElTerceroTest` | Se prueba el servicio aunque nadie haya escrito el cálculo. Y un mock sin entrenar no falla: **devuelve `0.0`**. |
+| `ArgumentosTest` | Si el resultado es del tercero, lo tuyo es la **llamada**: `verify` y `ArgumentCaptor` sobre los seis primitivos. |
+| `InyeccionTest` | `@Mock` + `@InjectMocks`: Mockito hace en el test lo que `@Autowired` hará en producción. |
+| `FallosDelTerceroTest` | `thenThrow`, negativos y `NaN` — escenarios imposibles de provocar con la implementación real. |
+| `TrampaDeMatchersTest` | Mezclar matchers con valores crudos revienta. Con seis parámetros es casi inevitable. |
+
+Para el tratamiento completo del tema —315 tests, cinco guías y scripts que demuestran midiendo—
+está la carpeta [`testing/`](testing/). Estos cuatro son la versión que se escribió en clase.
+
 ---
 
 ## Cómo abrirlo en Eclipse
@@ -87,7 +125,11 @@ dónde apunta* la variable del que te llamó.
    ```
 2. En Eclipse: **File → Import… → General → Existing Projects into Workspace**.
 3. Selecciona la carpeta `academyMty` y marca **Search for nested projects**.
-4. Importa los cinco proyectos.
+4. Marca los proyectos que vayas a usar.
 
-Solo se versiona el código fuente (`src/`). Las clases compiladas (`bin/`) las genera Eclipse
-al importar, por eso no están en el repositorio.
+Solo se versiona el código fuente. Las clases compiladas —`bin/` en los proyectos de Eclipse,
+`target/` en los de Maven— las genera el IDE al importar, por eso no están en el repositorio.
+
+`demoTestJunit2` y `mockito` son proyectos **Maven**: al importarlos, Eclipse descarga sus
+dependencias (JUnit y Mockito), así que la primera vez hace falta conexión. Si el proyecto
+aparece con errores, **clic derecho → Maven → Update Project** (`Alt`+`F5`).
