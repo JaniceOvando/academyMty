@@ -115,6 +115,28 @@ Las cinco clases de `mockito/src/test/java` toman una idea cada una:
 Para el tratamiento completo del tema —315 tests, cinco guías y scripts que demuestran midiendo—
 está la carpeta [`testing/`](testing/). Estos cuatro son la versión que se escribió en clase.
 
+## `taskflow-api` — todo junto, como en un trabajo real
+
+El resto del repositorio aísla **un** concepto por carpeta. Este proyecto hace lo contrario: es
+la API REST completa de **TaskFlow**, con todo funcionando a la vez.
+
+| Capa | Qué hay |
+|---|---|
+| Web | Controladores REST, DTOs como `record`, validación con Jakarta, Swagger UI |
+| Seguridad | Login con **JWT**, filtro propio, roles, y la distinción `401` (no sé quién eres) vs `403` (sé quién eres y no puedes) |
+| Dominio | Las reglas de negocio viven en la **entidad**, no en el servicio: `Task.crear` y `Task.setStatus` |
+| Errores | Un `@RestControllerAdvice` traduce cada excepción a su código HTTP: `400`, `403`, `404`, `422` |
+| Datos | JPA/Hibernate sobre **H2** en local y **Postgres** en Docker — el mismo código, sin tocar una línea |
+| Pruebas | 67 tests en tres niveles + gate de cobertura del 70% (`mvn verify`) |
+| Entrega | `Dockerfile` multi-etapa y `docker compose` que levanta API + Postgres |
+
+Lo interesante de leerlo no es que funcione: es **por qué cada regla está donde está**. Cada una
+nació de un problema concreto del cliente, y eso se cuenta en su
+[`README`](taskflow-api/README.md).
+
+Para arrancarlo rápido: `mvn spring-boot:run` y abre `http://localhost:8080/swagger-ui/index.html`.
+Entra con `ana` / `ana123`.
+
 ---
 
 ## Cómo abrirlo en Eclipse
@@ -130,6 +152,7 @@ está la carpeta [`testing/`](testing/). Estos cuatro son la versión que se esc
 Solo se versiona el código fuente. Las clases compiladas —`bin/` en los proyectos de Eclipse,
 `target/` en los de Maven— las genera el IDE al importar, por eso no están en el repositorio.
 
-`demoTestJunit2` y `mockito` son proyectos **Maven**: al importarlos, Eclipse descarga sus
-dependencias (JUnit y Mockito), así que la primera vez hace falta conexión. Si el proyecto
+`demoTestJunit2`, `mockito` y `taskflow-api` son proyectos **Maven**: al importarlos, Eclipse
+descarga sus dependencias, así que la primera vez hace falta conexión. `taskflow-api` se trae
+Spring Boot entero, así que esa primera vez tarda bastante más que los otros dos. Si un proyecto
 aparece con errores, **clic derecho → Maven → Update Project** (`Alt`+`F5`).

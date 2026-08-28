@@ -39,3 +39,12 @@ hs_err_pid*
 # en la historia de git para siempre y el clon pesa eso de mas para todos.
 proyectosWeb/springWebFlux/Conceptos/notebook/
 
+# Secretos de ejecucion. taskflow-api/.env lo lee docker compose y lleva la
+# contrasena de Postgres y el JWT_SECRET reales. Lo que SI se versiona es
+# .env.example, que documenta QUE variables existen sin sus valores.
+.env
+
+# Base de datos H2 en ARCHIVO que taskflow-api crea al arrancar en local
+# (jdbc:h2:file:./data/taskflow). Es estado de ejecucion de cada maquina, no fuente.
+**/data/*.mv.db
+**/data/*.trace.db
