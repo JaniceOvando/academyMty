@@ -134,7 +134,8 @@ Lo interesante de leerlo no es que funcione: es **por qué cada regla está dond
 nació de un problema concreto del cliente, y eso se cuenta en su
 [`README`](taskflow-api/README.md).
 
-**Para levantarlo no instalas nada**: ni JDK, ni Maven, ni Postgres. Basta tener Docker.
+**Para levantarlo no instalas nada**: ni JDK, ni Maven, ni Postgres. Basta con Docker Desktop
+actual — el que trae Compose v2, que se comprueba con `docker compose version`.
 
 ```bash
 cd taskflow-api

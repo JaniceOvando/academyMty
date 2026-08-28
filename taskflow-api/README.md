@@ -68,8 +68,8 @@ depende de que `SecurityConfig` declare **ambos**, `authenticationEntryPoint` y
 
 ## Cómo levantarlo — lo único que necesitas es Docker
 
-No instalas nada más. **Ni JDK, ni Maven, ni Postgres, ni un IDE.** El `Dockerfile` es
-multi-etapa y trae lo suyo:
+Basta con **Docker Desktop actual** (o Docker Engine con el plugin Compose v2). No instalas nada
+más: **ni JDK, ni Maven, ni Postgres, ni un IDE.** El `Dockerfile` es multi-etapa y trae lo suyo:
 
 | Etapa | Imagen | Qué aporta |
 |---|---|---|
@@ -78,6 +78,18 @@ multi-etapa y trae lo suyo:
 
 Y no hay nada que configurar: el `docker-compose.yml` trae valores por defecto para usuario,
 contraseña, base y secret. Se arranca tal cual sale del clon.
+
+### Antes de empezar, una comprobación de 5 segundos
+
+```bash
+docker compose version      # tiene que responder v2.x o superior
+```
+
+Si ese comando no existe y en tu máquina solo hay `docker-compose` (con guion, el antiguo), hay
+que actualizar Docker Desktop antes de seguir. **Este `docker-compose.yml` está escrito en formato
+Compose v2** —por eso no declara `version:`— y el Compose v1 no sabe leerlo: lo interpreta como el
+formato viejo y falla con errores de opciones no soportadas que no dicen cuál es la causa real.
+Cualquier Docker Desktop de los últimos años ya trae la v2.
 
 ### Los tres pasos
 
@@ -125,6 +137,7 @@ docker compose down -v    # además borra el volumen: la próxima vez arranca de
 | Síntoma | Qué pasa |
 |---|---|
 | `Cannot connect to the Docker daemon` | Docker no está corriendo. Abre Docker Desktop y espera a que esté en verde |
+| Errores de sintaxis u «opción no soportada» al leer el `docker-compose.yml` | Estás con Compose **v1** (`docker-compose`, con guion). Comprueba con `docker compose version` y actualiza Docker Desktop |
 | `port is already allocated` | Algo más ocupa el **8080** o el **5432**. Libéralo, o cambia el lado izquierdo del `ports:` en el compose (`"8081:8080"`) |
 | La primera vez tarda mucho | Normal: la etapa de build descarga todo el árbol de dependencias de Spring dentro del contenedor, y necesita internet. Mientras no toques el `pom.xml`, esa capa queda en caché y las siguientes son segundos |
 
