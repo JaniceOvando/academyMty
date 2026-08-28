@@ -134,8 +134,17 @@ Lo interesante de leerlo no es que funcione: es **por qué cada regla está dond
 nació de un problema concreto del cliente, y eso se cuenta en su
 [`README`](taskflow-api/README.md).
 
-Para arrancarlo rápido: `mvn spring-boot:run` y abre `http://localhost:8080/swagger-ui/index.html`.
-Entra con `ana` / `ana123`.
+**Para levantarlo no instalas nada**: ni JDK, ni Maven, ni Postgres. Basta tener Docker.
+
+```bash
+cd taskflow-api
+docker compose up --build
+```
+
+Eso levanta la API **y** su base de datos PostgreSQL, ya sembrada. Abre
+`http://localhost:8080/swagger-ui/index.html` y entra con `ana` / `ana123`. La guía completa
+—qué acabas de levantar, cómo comprobarlo, cómo pararlo y qué hacer si el puerto está
+ocupado— está en su [`README`](taskflow-api/README.md).
 
 ---
 

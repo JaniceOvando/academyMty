@@ -20,9 +20,12 @@ services:
       - "8080:8080"                # publica el puerto de la API hacia tu host (Swagger)
     environment:
       SPRING_PROFILES_ACTIVE: docker     # activa application-docker.yml (Postgres)
-      DB_USER: ${POSTGRES_USER}          # el yml documenta ${DB_USER}; aquí se inyecta
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET}          # la promesa de S2D5, pagada: el secret por ambiente
+      DB_USER: ${POSTGRES_USER:-taskflow}          # el yml documenta ${DB_USER}; aquí se inyecta
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-taskflow}
+      # El secret por AMBIENTE, no quemado en el jar. El valor de despues de ':-' es el
+      # de desarrollo: existe para que 'docker compose up' arranque sin configurar nada.
+      # Cualquier uso real lo sobreescribe con un .env (o con la variable del sistema).
+      JWT_SECRET: ${JWT_SECRET:-cambiame-en-produccion-taskflow-jwt-secret-de-64-caracteres-min!}
       # DB_HOST/DB_PORT/DB_NAME NO se ponen: los defaults del yml (db:5432/taskflow)
       # ya apuntan a este compose. Definirlos es lo unico que hace falta para mandar
       # la MISMA imagen contra otro Postgres, sin recompilar nada.
@@ -33,9 +36,9 @@ services:
   db:
     image: postgres:16
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:-taskflow}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-taskflow}
+      POSTGRES_DB: ${POSTGRES_DB:-taskflow}
     ports:
       - "5432:5432"                  # SOLO para inspección desde el host (psql/DBeaver);
                                      # entre contenedores no hace falta publicar nada
@@ -43,7 +46,7 @@ services:
       - pgdata:/var/lib/postgresql/data   # el estado de Postgres vive en el volumen, no en el contenedor
     healthcheck:
       # pg_isready responde OK cuando Postgres ACEPTA conexiones (no solo cuando el proceso arrancó)
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-taskflow} -d ${POSTGRES_DB:-taskflow}"]
       interval: 5s
       timeout: 3s
       retries: 10

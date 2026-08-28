@@ -66,27 +66,102 @@ pero sin permiso es `403` («sé quién eres, y no puedes»). Que salgan los dos
 depende de que `SecurityConfig` declare **ambos**, `authenticationEntryPoint` y
 `accessDeniedHandler` — con uno solo, todo cae en `401` y la diferencia se pierde.
 
-## Cómo correrlo
+## Cómo levantarlo — lo único que necesitas es Docker
 
-### Desde Eclipse
-Importar como proyecto Maven y ejecutar `TaskflowApiApplication` como Java Application. Levanta
-en `http://localhost:8080` con una base H2 **en archivo** (`data/taskflow.mv.db`), así que los
-datos sobreviven al reinicio. Consola SQL en `/h2-console`.
+No instalas nada más. **Ni JDK, ni Maven, ni Postgres, ni un IDE.** El `Dockerfile` es
+multi-etapa y trae lo suyo:
 
-### Desde la terminal
+| Etapa | Imagen | Qué aporta |
+|---|---|---|
+| `build` | `maven:3.9-eclipse-temurin-21` | Compila y empaqueta **dentro** del contenedor |
+| runtime | `eclipse-temurin:21-jre` | Solo el JRE 21 y el jar — ni Maven ni el JDK viajan a la imagen final |
+
+Y no hay nada que configurar: el `docker-compose.yml` trae valores por defecto para usuario,
+contraseña, base y secret. Se arranca tal cual sale del clon.
+
+### Los tres pasos
+
 ```bash
-mvn spring-boot:run
-```
-
-### Con Docker: la misma app contra Postgres
-```bash
-cp .env.example .env      # y pon dentro un JWT_SECRET de verdad
+git clone https://github.com/cursosmrugerio/academyMty.git
+cd academyMty/taskflow-api
 docker compose up --build
 ```
-Levanta dos contenedores: `postgres:16` y la API con el perfil `docker`. El `depends_on` espera
-al **healthcheck** de la base, no solo a que el contenedor arranque — la diferencia entre eso y
-un `depends_on` pelado es una API que se cae al iniciar porque Postgres todavía no aceptaba
-conexiones. Para bajarlo todo, incluidos los datos: `docker compose down -v`.
+
+Eso es todo. En Windows funciona igual, en PowerShell o en `cmd`.
+
+### Qué acabas de levantar
+
+| Contenedor | Qué es | Dónde queda |
+|---|---|---|
+| `db` | PostgreSQL 16 con su volumen propio | `localhost:5432` (solo para inspeccionar con psql o DBeaver) |
+| `api` | La API con el perfil `docker`, contra ese Postgres | `http://localhost:8080` |
+
+La API arranca con la base sembrada: los usuarios `ana` / `ana123`, `luis` / `luis123` y
+`admin` / `admin123`, y los tres proyectos de la agencia.
+
+El `depends_on` espera al **healthcheck** de la base, no solo a que el contenedor arranque. La
+diferencia entre eso y un `depends_on` pelado es una API que se cae al iniciar porque Postgres
+todavía no aceptaba conexiones.
+
+### Comprobar que está vivo
+
+```bash
+curl http://localhost:8080/info
+# {"app":"taskflow-api","version":"3.0.0"}
+```
+
+O abre `http://localhost:8080/swagger-ui/index.html`, entra con `ana` / `ana123` en
+`POST /auth/login`, y pega el token en el botón **Authorize**.
+
+### Pararlo
+
+```bash
+docker compose down       # para los contenedores, conserva los datos
+docker compose down -v    # además borra el volumen: la próxima vez arranca de cero
+```
+
+### Lo único que puede salirte mal
+
+| Síntoma | Qué pasa |
+|---|---|
+| `Cannot connect to the Docker daemon` | Docker no está corriendo. Abre Docker Desktop y espera a que esté en verde |
+| `port is already allocated` | Algo más ocupa el **8080** o el **5432**. Libéralo, o cambia el lado izquierdo del `ports:` en el compose (`"8081:8080"`) |
+| La primera vez tarda mucho | Normal: la etapa de build descarga todo el árbol de dependencias de Spring dentro del contenedor, y necesita internet. Mientras no toques el `pom.xml`, esa capa queda en caché y las siguientes son segundos |
+
+### Si quieres cambiar la configuración (opcional)
+
+Los valores por defecto son de desarrollo y están a la vista en el compose. Para cambiarlos, sin
+tocar ningún archivo versionado:
+
+```bash
+cp .env.example .env      # copy .env.example .env  en Windows
+```
+
+y edita ahí `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` y `JWT_SECRET`. El `.env` no se
+commitea nunca. **Fuera de tu máquina, el `JWT_SECRET` se cambia sí o sí**: el que viene por
+defecto es público, está en este repositorio, y con él cualquiera puede firmar un token válido.
+
+### Dos cosas que no tienes que revisar
+
+**Intel o ARM, da igual.** Las tres imágenes base publican `amd64` y `arm64`, y como el compose
+construye **en cada máquina**, cada una genera la suya nativa. Un Mac con Apple Silicon y un PC
+con Windows corren el mismo comando sin tocar una línea.
+
+**Los finales de línea, tampoco.** Git para Windows los convierte al clonar, y un `\r` colado en
+el `.env` entra *dentro* del valor: `JWT_SECRET=abc\r` firma con `abc\r`, la API arranca tan
+tranquila y todo login devuelve `401` sin decir por qué. El `.gitattributes` de esta carpeta
+fuerza LF, así que no puede pasar.
+
+## Otras formas de correrlo, si vas a tocar el código
+
+Estas sí necesitan JDK 21 y Maven en tu máquina, y no usan Postgres: el perfil por defecto
+levanta una **H2 en archivo** (`data/taskflow.mv.db`), así que los datos sobreviven al reinicio.
+Consola SQL en `/h2-console`.
+
+| Desde | Cómo |
+|---|---|
+| Eclipse | Importar como proyecto Maven y ejecutar `TaskflowApiApplication` como Java Application |
+| Terminal | `mvn spring-boot:run` |
 
 ## Los tests
 
