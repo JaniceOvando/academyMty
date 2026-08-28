@@ -1,6 +1,7 @@
 package com.taskflow.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -28,8 +29,12 @@ import java.util.Map;
 public class InfoController {
 
     private static final String APP = "taskflow-api";
-    private static final String VERSION = "3.0.0";   // FREEZE S3D5: subido de "3.0.0-rc1" al taggear v3.0
+    // public, y no por capricho: OpenApiConfig la referencia para que el documento de Swagger
+    // anuncie la MISMA version que responde /info. Al ser static final con literal es constante de
+    // compilacion, asi que se puede usar dentro de una anotacion. Un numero, un solo sitio.
+    public static final String VERSION = "3.0.0";
 
+    @SecurityRequirements   // publico: lo consulta el smoke test del deploy, sin credenciales
     @Operation(summary = "Nombre y versión del servicio",
             description = "Público (sin token): lo consume el smoke test del deploy tras cada release.")
     @GetMapping("/info")

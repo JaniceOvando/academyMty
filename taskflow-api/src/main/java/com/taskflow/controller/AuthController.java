@@ -7,6 +7,7 @@ import com.taskflow.dto.auth.UserResponse;
 import com.taskflow.model.User;
 import com.taskflow.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -40,6 +41,7 @@ public class AuthController {
     }
 
     /** POST /auth/register — 201 con UserResponse. Username duplicado -> 409 (advice). */
+    @SecurityRequirements   // publico: exigir token para registrarse seria circular
     @Operation(summary = "Registra un usuario",
             description = "El password viaja una vez y se guarda hasheado (BCrypt). Nunca se devuelve.")
     @PostMapping("/register")
@@ -49,6 +51,7 @@ public class AuthController {
     }
 
     /** POST /auth/login — 200 con AuthResponse(token). Credenciales malas -> 401 (advice). */
+    @SecurityRequirements   // publico: es el endpoint que ENTREGA el token
     @Operation(summary = "Autentica y devuelve un JWT",
             description = "Manda el token en 'Authorization: Bearer <token>' en los demás endpoints.")
     @PostMapping("/login")
